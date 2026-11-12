@@ -1213,9 +1213,22 @@ function pintarBolEd(){
   const dest = (nubeLista && window.Nube.usuario) ? 'Se publicará en Firebase: lo verá todo el personal.' : 'Se guardará solo en este equipo. Para que lo vea todo el personal, conecte Firebase o envíe el PDF para publicarlo en GitHub.';
   $('bBolDestino').textContent = dest;
   $('bolEdLista').innerHTML = BOL.map(b => `<div class="bol-ed"><span><b>${esc(b.titulo)}</b><small>${esc(b.numero||'')} ${esc(b.fecha||'')} · ${b.origen==='sitio'?'publicado en GitHub':b.origen==='nube'?'Firebase':'solo este equipo'}</small></span>
+    ${b.origen==='local' && nubeLista && window.Nube.usuario ? `<button class="btn dark" data-bsubir="${esc(b.id)}">☁ Publicar</button>` : ''}
     ${b.origen==='sitio' ? '' : `<button class="btn danger" data-bborrar="${esc(b.id)}">Eliminar</button>`}</div>`).join('');
 }
 $('bolEdLista').addEventListener('click', async e => {
+  const sub = e.target.closest('[data-bsubir]');
+  if(sub){
+    const b = BOL.find(x => x.id === sub.dataset.bsubir); if(!b) return;
+    sub.disabled = true; sub.textContent = 'Publicando…';
+    try{
+      const { id, origen, blob, ...meta } = b;
+      const archivo = blob ? new File([blob], b.nombreArchivo || 'boletin', { type: blob.type }) : null;
+      await window.Nube.boletines.subir(meta, archivo); await IDB.borrar(id);
+      toast('Boletín publicado para todo el personal');
+    }catch(err){ toast('No se pudo publicar: ' + (err.code || err.message)); }
+    cargarBoletines(); return;
+  }
   const btn = e.target.closest('[data-bborrar]'); if(!btn) return;
   const b = BOL.find(x => x.id === btn.dataset.bborrar); if(!b || !confirm(`¿Eliminar el boletín “${b.titulo}”?`)) return;
   try { if(b.origen === 'nube') await window.Nube.boletines.borrar(b); else await IDB.borrar(b.id); toast('Boletín eliminado'); }
@@ -1341,7 +1354,7 @@ function abrirFormAgenda(a){
   $('afTipo').value = a ? a.tipo : 'cap'; $('afTema').value = a ? (a.tema||'') : ''; $('afFecha').value = a ? a.fecha : hoyISO();
   $('afHora').value = a ? (a.hora||'') : ''; $('afFin').value = a ? (a.fin||'') : ''; $('afLugar').value = a ? (a.lugar||'') : '';
   $('afRelator').value = a ? (a.relator||'') : ''; $('afAsist').value = a ? (a.asistentes||'') : ''; $('afNotas').value = a ? (a.notas||'') : '';
-  $('afDestino').textContent = (nubeLista && window.Nube.usuario) ? 'Se publicará en Firebase: lo verá todo el personal.' : 'Se guardará solo en este equipo. Para que lo vea todo el personal, conecte Firebase o envíe la agenda para publicarla en GitHub.';
+  $('afDestino').textContent = (nubeLista && window.Nube.usuario) ? (a && a.origen === 'local' ? 'Al guardar, esta actividad pasará a la nube y la verá todo el personal.' : 'Se publicará en Firebase: lo verá todo el personal.') : 'Se guardará solo en este equipo. Para que lo vea todo el personal, conecte Firebase o envíe la agenda para publicarla en GitHub.';
   let borrar = $('afBorrar'); if(borrar) borrar.remove();
   if(a){ borrar = document.createElement('button'); borrar.id = 'afBorrar'; borrar.className = 'btn danger'; borrar.style.cssText = 'margin-top:8px;width:100%;justify-content:center'; borrar.textContent = 'Eliminar actividad'; borrar.onclick = borrarAgenda; $('afGuardar').after(borrar); }
   ajustarFormTipo(); $('mAgForm').classList.add('show'); setTimeout(() => $('afTema').focus(), 50);
@@ -1356,8 +1369,10 @@ $('afGuardar').onclick = async () => {
   const btn = $('afGuardar'); btn.disabled = true;
   try{
     const prev = agEditando;
-    if(nubeLista && window.Nube.usuario && (!prev || prev.origen === 'nube')){
-      await window.Nube.agenda.guardar({ ...a, id: prev && prev.id, origen: prev && prev.origen }); toast('Actividad publicada para todo el personal');
+    if(nubeLista && window.Nube.usuario){
+      await window.Nube.agenda.guardar({ ...a, id: prev && prev.origen === 'nube' ? prev.id : null, origen: prev && prev.origen === 'nube' ? 'nube' : null });
+      if(prev && prev.origen === 'local') agLocalSet(agLocal().filter(x => x.id !== prev.id));
+      toast('Actividad publicada para todo el personal');
     } else {
       const l = agLocal(), id = prev && prev.origen === 'local' ? prev.id : 'a' + Date.now().toString(36);
       agLocalSet([...l.filter(x => x.id !== id), { ...a, id }]); toast('Actividad guardada en este equipo');
