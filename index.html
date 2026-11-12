@@ -1246,8 +1246,15 @@ $('bBolGuardar').onclick = async () => {
   const btn = $('bBolGuardar'); btn.disabled = true; btn.textContent = 'Guardando…';
   try{
     if(nubeLista && window.Nube.usuario){
-      try { await window.Nube.boletines.subir(meta, archivo); toast('Boletín publicado para todo el personal'); }
-      catch(err){ console.warn(err); await IDB.poner({ ...meta, id: 'l' + Date.now().toString(36), blob: archivo || null }); toast('No se pudo subir a Firebase (' + (err.code || 'error') + '). Quedó guardado en este equipo.'); }
+      try { await window.Nube.boletines.subir(meta, archivo); toast('Boletín publicado para todo el personal'); $('bBolDestino').style.color = ''; }
+      catch(err){
+        console.error('Error al subir boletín', err);
+        $('bBolDestino').style.color = '#b3261e';
+        $('bBolDestino').textContent = '⚠ No se pudo publicar en Firebase: ' + (err.code || '') + ' ' + (err.message || err) + '. No se guardó nada; envíe una captura de este mensaje.';
+        return;
+      }
+    } else if(nubeLista){
+      pedirClave(() => $('bBolGuardar').click()); return;
     } else {
       await IDB.poner({ ...meta, id: 'l' + Date.now().toString(36), blob: archivo || null });
       toast('Boletín guardado en este equipo');
@@ -1255,7 +1262,7 @@ $('bBolGuardar').onclick = async () => {
     ['bTit','bNum','bDescr','bUrl','bArchivo'].forEach(id => $(id).value = ''); $('bFecha').value = hoyISO();
     await cargarBoletines();
   }catch(err){ toast('No se pudo guardar el boletín: ' + err.message); }
-  finally{ btn.disabled = false; btn.textContent = 'Agregar boletín'; }
+  finally{ btn.disabled = false; btn.textContent = 'Publicar boletín'; }
 };
 function abrirCarga(){ pintarBolEd(); if(!$('bFecha').value) $('bFecha').value = hoyISO(); $('mBoletin').classList.add('show'); setTimeout(() => $('bTit').focus(), 50); }
 $('bBolNuevo').onclick = () => pedirClave(abrirCarga);
@@ -1373,12 +1380,14 @@ $('afGuardar').onclick = async () => {
       await window.Nube.agenda.guardar({ ...a, id: prev && prev.origen === 'nube' ? prev.id : null, origen: prev && prev.origen === 'nube' ? 'nube' : null });
       if(prev && prev.origen === 'local') agLocalSet(agLocal().filter(x => x.id !== prev.id));
       toast('Actividad publicada para todo el personal');
+    } else if(nubeLista){
+      pedirClave(() => $('afGuardar').click()); return;
     } else {
       const l = agLocal(), id = prev && prev.origen === 'local' ? prev.id : 'a' + Date.now().toString(36);
       agLocalSet([...l.filter(x => x.id !== id), { ...a, id }]); toast('Actividad guardada en este equipo');
     }
     $('mAgForm').classList.remove('show'); await cargarAgenda();
-  }catch(e){ toast('No se pudo guardar: ' + (e.code || e.message)); }
+  }catch(e){ console.error(e); $('afDestino').style.color = '#b3261e'; $('afDestino').textContent = '⚠ No se pudo guardar: ' + (e.code || '') + ' ' + (e.message || e); }
   finally{ btn.disabled = false; }
 };
 async function borrarAgenda(){
