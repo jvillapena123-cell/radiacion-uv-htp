@@ -235,6 +235,7 @@ body.pdf{background:#fff}
 <div class="toolbar">
   <div class="tt"><span class="dot" id="dotNube" title="Estado conexión Firebase"></span> Tablero Radiación UV · HTP <span id="estadoNube" style="font-weight:500;opacity:.75;font-size:12px"></span></div>
   <button class="btn" id="bRef" title="Carga un pronóstico de referencia (modelo) para el terminal">⟳ Referencia automática</button>
+  <button class="btn" id="bFotos" title="Actualizar fotos del terminal (requiere clave)">📷 Fotos</button>
   <button class="btn" id="bEditar">✎ Editar</button>
   <button class="btn" id="bBloquear" style="display:none" title="Cerrar sesión de edición">🔒 Bloquear</button>
   <button class="btn" id="bNube" style="display:none">☁ Publicar</button>
@@ -391,7 +392,7 @@ body.pdf{background:#fff}
       </div>
     </fieldset>
 
-    <fieldset>
+    <fieldset id="fsAreas">
       <legend>Áreas del terminal y fotos</legend>
       <div id="eAreas"></div>
       <button class="btn ghost" id="bAreaMas" style="margin-top:10px">+ Agregar área</button>
@@ -786,7 +787,7 @@ function pintarAreasEd(){
       <button class="btn danger" data-borrar="${i}">Eliminar área</button>
     </div></div>`).join('');
 }
-function comprimir(file, max=1280, q=0.72){
+function comprimir(file, max=1100, q=0.7){
   return new Promise((res, rej) => {
     const fr = new FileReader();
     fr.onload = () => { const im = new Image(); im.onload = () => {
@@ -864,6 +865,7 @@ $('bBloquear').onclick = async () => {
   cerrarPanel(); $('mBoletin').classList.remove('show'); actualizarCandado(); toast('Edición bloqueada');
 };
 $('bEditar').onclick = () => pedirClave(abrirPanel);
+$('bFotos').onclick = () => pedirClave(() => { abrirPanel(); setTimeout(() => { const f = $('fsAreas'); f.scrollIntoView({ behavior:'smooth', block:'start' }); f.style.boxShadow = '0 0 0 3px #E8804A'; setTimeout(() => f.style.boxShadow = '', 2200); }, 280); });
 $('bCerrar').onclick = cerrarPanel; $('backdrop').onclick = cerrarPanel;
 $('bRef').onclick = () => cargarReferencia(false);
 
