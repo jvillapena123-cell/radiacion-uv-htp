@@ -38,7 +38,38 @@ button,input,select,textarea{font-family:inherit}
 
 /* ---------- Reporte ---------- */
 /* Distribución: panel de boletines + reporte */
-.layout{max-width:1560px;margin:22px auto;padding:0 18px 40px;display:grid;grid-template-columns:330px minmax(0,1180px);gap:22px;align-items:start;justify-content:center}
+.layout{max-width:1900px;margin:22px auto;padding:0 18px 40px;display:grid;grid-template-columns:300px minmax(0,1180px) 300px;gap:20px;align-items:start;justify-content:center}
+.side-der{position:sticky;top:76px}
+.ag-card{padding:18px 16px;display:flex;flex-direction:column;max-height:calc(100vh - 100px)}
+.ag-scroll{overflow:auto;flex:1;padding-right:2px}
+.ag-sem{font-size:12px;color:var(--muted);margin:-4px 0 12px;font-weight:600}
+.ag-tit{font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--navy);margin:14px 0 8px;display:flex;align-items:center;gap:6px}
+.ag-tit:first-child{margin-top:0}
+.ag-item{display:flex;gap:10px;width:100%;text-align:left;border:1px solid var(--line);background:#fff;border-radius:12px;padding:9px 10px;margin-bottom:8px;cursor:pointer;font-family:inherit;transition:all .15s;position:relative}
+.ag-item:hover{border-color:var(--navy);box-shadow:0 3px 10px rgba(31,58,110,.12)}
+.ag-item.pasada{opacity:.5}
+.ag-fecha{flex:0 0 44px;border-radius:8px;background:var(--navy);color:#fff;text-align:center;padding:5px 0;line-height:1.05}
+.ag-fecha small{display:block;font-size:9.5px;font-weight:700;text-transform:uppercase;opacity:.85}
+.ag-fecha b{display:block;font-size:19px;font-weight:900}
+.ag-item.cap .ag-fecha{background:var(--orange)}
+.ag-item.comite .ag-fecha{background:#2E7D5B}
+.ag-tx{flex:1;min-width:0;font-size:11.5px;color:var(--muted);line-height:1.35}
+.ag-tx b{display:block;font-size:13px;color:var(--ink);line-height:1.25;margin-bottom:2px}
+.ag-tx span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ag-badge{position:absolute;top:-6px;right:8px;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;letter-spacing:.5px;background:#D8001D}
+.ag-badge.prox{background:var(--navy)}
+.ag-vacio{font-size:12px;color:var(--muted);text-align:center;padding:14px 8px;border:1.5px dashed var(--line);border-radius:10px;margin-bottom:6px}
+.ag-btns{display:flex;gap:8px;margin-top:10px}
+.ag-btns .btn{flex:1;justify-content:center;font-size:12.5px;padding:9px 8px}
+.modal .box.agenda{width:min(760px,94%);max-height:92vh;display:flex;flex-direction:column}
+.mes-nav{display:flex;align-items:center;gap:8px}
+.mes-nav b{min-width:150px;text-align:center;color:var(--navy);font-size:16px}
+.ag-detalle dl{display:grid;grid-template-columns:130px 1fr;gap:8px 12px;margin:12px 0 0;font-size:14px}
+.ag-detalle dt{color:var(--muted);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.5px;padding-top:2px}
+.ag-detalle dd{margin:0;color:var(--ink);font-weight:500;white-space:pre-line}
+.ag-tipo{display:inline-block;color:#fff;font-size:11px;font-weight:800;padding:4px 9px;border-radius:5px;text-transform:uppercase;letter-spacing:.5px}
+.carga-body select,.carga-body textarea{width:100%;border:1.5px solid var(--line);border-radius:8px;padding:10px;margin:4px 0;font-size:14px;font-family:inherit}
+.carga-body textarea{min-height:60px}
 #reporte{min-width:0}
 .side{position:sticky;top:76px}
 .side-card{padding:18px 16px;display:flex;flex-direction:column;max-height:calc(100vh - 100px)}
@@ -193,7 +224,7 @@ svg text{font-family:'Montserrat',sans-serif}
 
 /* Modo pantalla (TV / sala VIT) */
 body.pantalla .toolbar{display:none}
-body.pantalla .layout{max-width:1900px;grid-template-columns:360px minmax(0,1fr)}
+body.pantalla .layout{max-width:2400px;grid-template-columns:330px minmax(0,1fr) 330px}
 
 /* Modo PDF */
 body.pdf .toolbar,body.pdf .no-pdf{display:none!important}
@@ -204,7 +235,18 @@ body.pdf #pag2 .grid{margin-top:0}
 body.pdf .card{box-shadow:none;border:1px solid var(--line)}
 body.pdf{background:#fff}
 
+@media (max-width:1780px){
+  .layout{grid-template-columns:300px minmax(0,1180px);grid-template-rows:auto 1fr}
+  .side-der{grid-column:1;grid-row:2;position:static}
+  .side{grid-row:1}
+  #reporte{grid-column:2;grid-row:1 / span 2}
+  .ag-card{max-height:none}
+}
 @media (max-width:1320px){
+  .layout{grid-template-rows:none}
+  .side-der{grid-column:auto;grid-row:auto}
+  #reporte{grid-column:auto;grid-row:auto}
+  .ag-card{max-height:none}
   .layout{grid-template-columns:1fr;max-width:1180px}
   .side{position:static}
   .side-card{max-height:none}
@@ -337,6 +379,78 @@ body.pdf{background:#fff}
   </div>
  </div>
 </main>
+
+<aside class="side-der no-pdf" id="sideDer">
+  <div class="card ag-card">
+    <div class="side-top"><h2>Agenda de la semana</h2><span class="count" id="agCount">0</span></div>
+    <div class="ag-sem" id="agSemana"></div>
+    <div class="ag-scroll">
+      <div class="ag-tit">🎓 Capacitaciones</div>
+      <div id="agCap"></div>
+      <div class="ag-tit">🦺 Reuniones de seguridad y Comité Paritario</div>
+      <div id="agReu"></div>
+    </div>
+    <div class="ag-btns">
+      <button class="btn ghost" id="bAgMes">📅 Ver todas del mes</button>
+      <button class="btn dark" id="bAgNueva">+ Agregar</button>
+    </div>
+  </div>
+</aside>
+</div>
+
+<!-- Agenda del mes -->
+<div class="modal" id="mAgMes">
+  <div class="box agenda">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+      <h3 style="margin:0">Agenda del mes</h3>
+      <div class="mes-nav"><button class="btn ghost" id="agPrev">◀</button><b id="agMesTit"></b><button class="btn ghost" id="agNext">▶</button></div>
+      <button class="btn ghost" id="agMesX">✕</button>
+    </div>
+    <div class="carga-body" style="margin-top:12px">
+      <div class="ag-tit">🎓 Capacitaciones</div><div id="agMesCap"></div>
+      <div class="ag-tit">🦺 Reuniones de seguridad y Comité Paritario</div><div id="agMesReu"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Detalle de actividad -->
+<div class="modal" id="mAgDet">
+  <div class="box agenda ag-detalle">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+      <div><span class="ag-tipo" id="adTipo"></span><h3 style="margin:8px 0 0" id="adTema"></h3></div>
+      <button class="btn ghost" id="adX">✕</button>
+    </div>
+    <dl id="adDl"></dl>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap">
+      <button class="btn ghost" id="adIcs">📆 Agregar a mi calendario</button>
+      <button class="btn ghost" id="adEditar">✎ Editar</button>
+      <button class="btn dark" id="adCerrar">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Cargar / editar actividad -->
+<div class="modal" id="mAgForm">
+  <div class="box carga">
+    <div style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0" id="afTitulo">Agregar actividad</h3><button class="btn ghost" id="afX">✕</button></div>
+    <div class="carga-body">
+      <label>Tipo *</label>
+      <select id="afTipo"><option value="cap">Capacitación</option><option value="reunion">Reunión de seguridad</option><option value="comite">Comité Paritario</option></select>
+      <label id="afTemaLbl">Tema de la capacitación *</label><input id="afTema">
+      <div class="row2">
+        <div><label>Fecha *</label><input type="date" id="afFecha"></div>
+        <div class="row2" style="gap:6px"><div><label>Inicio *</label><input type="time" id="afHora"></div><div><label>Término</label><input type="time" id="afFin"></div></div>
+      </div>
+      <label>Lugar *</label><input id="afLugar" placeholder="Ej.: Sala de capacitación, edificio administración">
+      <div id="afSoloCap">
+        <label>Relator(a)</label><input id="afRelator" placeholder="Nombre y empresa/área">
+        <label>Quiénes deben asistir</label><textarea id="afAsist" placeholder="Ej.: Jefes de turno, operadores mantenedores, movilizadores Mabe"></textarea>
+      </div>
+      <label>Observaciones</label><input id="afNotas" placeholder="Opcional (llevar EPP, registro de asistencia, etc.)">
+      <button class="btn primary" id="afGuardar" style="margin-top:12px;width:100%;justify-content:center">Guardar actividad</button>
+      <div class="mini" id="afDestino" style="margin-top:8px"></div>
+    </div>
+  </div>
 </div>
 
 <!-- Visor de boletines -->
@@ -520,6 +634,11 @@ if (configurado) {
           await fs.deleteDoc(fs.doc(db, 'boletines', b.id));
         }
       },
+      agenda: {
+        async listar() { const q = await fs.getDocs(fs.collection(db, 'agenda')); return q.docs.map(d => ({ ...d.data(), id: d.id, origen: 'nube' })); },
+        async guardar(a) { const { id, origen, ...datos } = a; const ref = id && origen === 'nube' ? fs.doc(db, 'agenda', id) : fs.doc(fs.collection(db, 'agenda')); await fs.setDoc(ref, datos); return ref.id; },
+        async borrar(id) { await fs.deleteDoc(fs.doc(db, 'agenda', id)); }
+      },
       loginClave: (clave) => au.signInWithEmailAndPassword(auth, (window.HTP_ACCESO && window.HTP_ACCESO.usuarioFirebase) || 'editor@htpchile.cl', clave),
       logout: () => au.signOut(auth)
     };
@@ -640,7 +759,7 @@ function render(){
   dato.classList.toggle('dark-text', !!n && textoClaro(n.color));
   $('vIuv').textContent = v === null ? '—' : Math.round(v);
   $('vCat').firstChild.nodeValue = n ? n.nombre : 'Sin dato';
-  $('vCatTxt').textContent = n ? n.txt : 'Ingrese el índice publicado por la DMC (✎ Editar)';
+  $('vCatTxt').textContent = n ? n.txt : 'Actualizando el índice UV automáticamente…';
   $('vHora').textContent = '☀ Mayor radiación: ' + (S.hora || '—');
   $('vEst').textContent = '📍 ' + (S.estacion || '—');
   const dmc = S.dmcObs && S.dmcObs.maximo != null ? S.dmcObs : null;
@@ -914,6 +1033,7 @@ window.addEventListener('nube-lista', async () => {
   nubeLista = true; $('bNube').style.display = ''; $('dotNube').classList.add('on'); $('estadoNube').textContent = '· Firebase conectado';
   await traerDeNube(true);
   cargarBoletines();
+  cargarAgenda();
 });
 window.addEventListener('nube-auth', () => { actualizarCandado(); if(typeof pintarBolEd === 'function') pintarBolEd(); });
 window.addEventListener('nube-error', () => { $('estadoNube').textContent = '· sin conexión a Firebase (modo local)'; });
@@ -1087,7 +1207,7 @@ function cerrarVisor(){
 }
 $('vbX').onclick = cerrarVisor; $('vbCerrar').onclick = cerrarVisor;
 $('visor').addEventListener('click', e => { if(e.target.id === 'visor') cerrarVisor(); });
-document.addEventListener('keydown', e => { if(e.key === 'Escape'){ if($('visor').classList.contains('show')) cerrarVisor(); else { $('mBoletin').classList.remove('show'); $('mClave').classList.remove('show'); cerrarPanel(); } } });
+document.addEventListener('keydown', e => { if(e.key === 'Escape'){ if($('visor').classList.contains('show')) cerrarVisor(); else { ['mBoletin','mClave','mAgMes','mAgDet','mAgForm'].forEach(id => $(id).classList.remove('show')); cerrarPanel(); } } });
 
 function pintarBolEd(){
   const dest = (nubeLista && window.Nube.usuario) ? 'Se publicará en Firebase: lo verá todo el personal.' : 'Se guardará solo en este equipo. Para que lo vea todo el personal, conecte Firebase o envíe el PDF para publicarlo en GitHub.';
@@ -1128,6 +1248,131 @@ function abrirCarga(){ pintarBolEd(); if(!$('bFecha').value) $('bFecha').value =
 $('bBolNuevo').onclick = () => pedirClave(abrirCarga);
 $('bmX').onclick = () => $('mBoletin').classList.remove('show');
 
+/* ---------- Agenda: capacitaciones, reuniones y Comité Paritario ---------- */
+const AG_LS = 'uvhtp_agenda_v1';
+const AG_TIPO = { cap:{ n:'Capacitación', c:'#E8804A' }, reunion:{ n:'Reunión de seguridad', c:'#1F3A6E' }, comite:{ n:'Comité Paritario', c:'#2E7D5B' } };
+let AG = [], agMes = hoyISO().slice(0,7), agActual = null, agEditando = null;
+const agLocal = () => { try { return JSON.parse(localStorage.getItem(AG_LS) || '[]'); } catch(e){ return []; } };
+const agLocalSet = l => { try { localStorage.setItem(AG_LS, JSON.stringify(l)); } catch(e){} };
+const fISO = d => { const x = new Date(d); x.setMinutes(x.getMinutes() - x.getTimezoneOffset()); return x.toISOString().slice(0,10); };
+function semanaActual(){ const h = new Date(hoyISO()+'T12:00:00'), dw = (h.getDay()+6)%7; const lu = new Date(h); lu.setDate(h.getDate()-dw); const do_ = new Date(lu); do_.setDate(lu.getDate()+6); return [fISO(lu), fISO(do_)]; }
+
+async function cargarAgenda(){
+  const l = [];
+  try { const r = await fetch('datos/agenda.json?t=' + Date.now(), { cache:'no-store' }); if(r.ok) (await r.json()).forEach(a => l.push({ ...a, origen:'sitio' })); } catch(e){}
+  if(nubeLista){ try { l.push(...await window.Nube.agenda.listar()); } catch(e){ console.warn('agenda nube', e); } }
+  agLocal().forEach(a => l.push({ ...a, origen:'local' }));
+  AG = l.sort((a,b) => (a.fecha + (a.hora||'')).localeCompare(b.fecha + (b.hora||'')));
+  renderAgenda();
+}
+function itemAgenda(a, conBadge){
+  const t = AG_TIPO[a.tipo] || AG_TIPO.reunion, f = new Date(a.fecha+'T12:00:00'), hoy = hoyISO();
+  const pasada = a.fecha < hoy;
+  const prox = conBadge && !pasada && a.fecha !== hoy && AG.find(x => x.fecha > hoy) === a;
+  const titulo = a.tipo === 'cap' ? a.tema : (a.tema || t.n);
+  return `<button class="ag-item ${a.tipo} ${pasada?'pasada':''}" data-ag="${esc(a.id)}">
+    ${a.fecha === hoy ? '<span class="ag-badge">HOY</span>' : prox ? '<span class="ag-badge prox">PRÓXIMA</span>' : ''}
+    <span class="ag-fecha"><small>${f.toLocaleDateString('es-CL',{weekday:'short'}).replace('.','')}</small><b>${f.getDate()}</b><small>${f.toLocaleDateString('es-CL',{month:'short'}).replace('.','')}</small></span>
+    <span class="ag-tx"><b>${esc(titulo)}</b>
+      <span>🕐 ${esc(a.hora||'')}${a.fin?' – '+esc(a.fin):''} · 📍 ${esc(a.lugar||'')}</span>
+      ${a.tipo === 'cap' && a.relator ? `<span>👤 ${esc(a.relator)}</span>` : a.tipo !== 'cap' ? `<span>${t.n}</span>` : ''}
+      ${a.origen === 'local' ? '<span style="color:#8a4b00;font-weight:700;font-size:10px">● Solo en este equipo</span>' : ''}
+    </span></button>`;
+}
+function renderAgenda(){
+  const [ini, fin] = semanaActual();
+  const sem = AG.filter(a => a.fecha >= ini && a.fecha <= fin);
+  const fmt = d => new Date(d+'T12:00:00').toLocaleDateString('es-CL',{day:'numeric',month:'short'}).replace('.','');
+  $('agSemana').textContent = `Semana del ${fmt(ini)} al ${fmt(fin)}`;
+  $('agCount').textContent = sem.length;
+  const cap = sem.filter(a => a.tipo === 'cap'), reu = sem.filter(a => a.tipo !== 'cap');
+  $('agCap').innerHTML = cap.length ? cap.map(a => itemAgenda(a, true)).join('') : '<div class="ag-vacio">Sin capacitaciones esta semana</div>';
+  $('agReu').innerHTML = reu.length ? reu.map(a => itemAgenda(a, true)).join('') : '<div class="ag-vacio">Sin reuniones esta semana</div>';
+  if($('mAgMes').classList.contains('show')) renderMes();
+}
+function renderMes(){
+  const [y,m] = agMes.split('-').map(Number);
+  const tm = new Date(y, m-1, 1).toLocaleDateString('es-CL',{month:'long',year:'numeric'}).replace(' de ', ' '); $('agMesTit').textContent = tm.charAt(0).toUpperCase() + tm.slice(1);
+  const mes = AG.filter(a => a.fecha.startsWith(agMes));
+  const cap = mes.filter(a => a.tipo === 'cap'), reu = mes.filter(a => a.tipo !== 'cap');
+  $('agMesCap').innerHTML = cap.length ? cap.map(a => itemAgenda(a)).join('') : '<div class="ag-vacio">Sin capacitaciones programadas este mes</div>';
+  $('agMesReu').innerHTML = reu.length ? reu.map(a => itemAgenda(a)).join('') : '<div class="ag-vacio">Sin reuniones programadas este mes</div>';
+}
+function moverMes(n){ const [y,m] = agMes.split('-').map(Number); const d = new Date(y, m-1+n, 1); agMes = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; renderMes(); }
+$('bAgMes').onclick = () => { agMes = hoyISO().slice(0,7); renderMes(); $('mAgMes').classList.add('show'); };
+$('agPrev').onclick = () => moverMes(-1); $('agNext').onclick = () => moverMes(1);
+$('agMesX').onclick = () => $('mAgMes').classList.remove('show');
+['mAgMes','mAgDet','mAgForm','mBoletin'].forEach(id => $(id).addEventListener('click', e => { if(e.target.id === id) $(id).classList.remove('show'); }));
+
+function abrirDetalle(a){
+  agActual = a; const t = AG_TIPO[a.tipo] || AG_TIPO.reunion;
+  $('adTipo').textContent = t.n; $('adTipo').style.background = t.c;
+  $('adTema').textContent = a.tema || t.n;
+  const filas = [['Fecha', fechaLarga(a.fecha)], ['Hora', (a.hora||'') + (a.fin ? ' a ' + a.fin + ' hrs' : ' hrs')], ['Lugar', a.lugar]];
+  if(a.tipo === 'cap'){ filas.push(['Relator(a)', a.relator]); filas.push(['Deben asistir', a.asistentes]); }
+  if(a.notas) filas.push(['Observaciones', a.notas]);
+  $('adDl').innerHTML = filas.filter(f => f[1]).map(([k,v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join('');
+  $('adEditar').style.display = a.origen === 'sitio' ? 'none' : '';
+  $('mAgDet').classList.add('show');
+}
+document.addEventListener('click', e => { const b = e.target.closest('[data-ag]'); if(b){ const a = AG.find(x => x.id === b.dataset.ag); if(a) abrirDetalle(a); } });
+$('adX').onclick = $('adCerrar').onclick = () => $('mAgDet').classList.remove('show');
+$('adIcs').onclick = () => {
+  const a = agActual; if(!a) return;
+  const dt = (f,h) => f.replace(/-/g,'') + 'T' + (h||'08:00').replace(':','') + '00';
+  const finH = a.fin || (() => { const [h,m] = (a.hora||'08:00').split(':').map(Number); return `${String(h+1).padStart(2,'0')}:${String(m).padStart(2,'0')}`; })();
+  const txt = s => String(s||'').replace(/[,;\\]/g, m => '\\'+m).replace(/\n/g,'\\n');
+  const t = AG_TIPO[a.tipo] || AG_TIPO.reunion;
+  const desc = [t.n, a.relator ? 'Relator: ' + a.relator : '', a.asistentes ? 'Deben asistir: ' + a.asistentes : '', a.notas || ''].filter(Boolean).join('\n');
+  const ics = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//HTP//Agenda Seguridad//ES','BEGIN:VEVENT',
+    'UID:' + a.id + '@htp-agenda', 'DTSTAMP:' + new Date().toISOString().replace(/[-:]/g,'').slice(0,15) + 'Z',
+    'DTSTART;TZID=America/Santiago:' + dt(a.fecha, a.hora), 'DTEND;TZID=America/Santiago:' + dt(a.fecha, finH),
+    'SUMMARY:' + txt((a.tipo === 'cap' ? 'Capacitación: ' : '') + (a.tema || t.n)), 'LOCATION:' + txt(a.lugar), 'DESCRIPTION:' + txt(desc),
+    'END:VEVENT','END:VCALENDAR'].join('\r\n');
+  const el = document.createElement('a'); el.href = URL.createObjectURL(new Blob([ics], { type:'text/calendar' }));
+  el.download = `${(a.tema || t.n).replace(/[^\wáéíóúñÁÉÍÓÚÑ -]+/g,'').slice(0,60)}.ics`; el.click(); setTimeout(() => URL.revokeObjectURL(el.href), 1500);
+};
+
+function ajustarFormTipo(){ const cap = $('afTipo').value === 'cap'; $('afSoloCap').style.display = cap ? '' : 'none'; $('afTemaLbl').textContent = cap ? 'Tema de la capacitación *' : 'Tema / motivo (opcional)'; }
+$('afTipo').onchange = ajustarFormTipo;
+function abrirFormAgenda(a){
+  agEditando = a || null;
+  $('afTitulo').textContent = a ? 'Editar actividad' : 'Agregar actividad';
+  $('afTipo').value = a ? a.tipo : 'cap'; $('afTema').value = a ? (a.tema||'') : ''; $('afFecha').value = a ? a.fecha : hoyISO();
+  $('afHora').value = a ? (a.hora||'') : ''; $('afFin').value = a ? (a.fin||'') : ''; $('afLugar').value = a ? (a.lugar||'') : '';
+  $('afRelator').value = a ? (a.relator||'') : ''; $('afAsist').value = a ? (a.asistentes||'') : ''; $('afNotas').value = a ? (a.notas||'') : '';
+  $('afDestino').textContent = (nubeLista && window.Nube.usuario) ? 'Se publicará en Firebase: lo verá todo el personal.' : 'Se guardará solo en este equipo. Para que lo vea todo el personal, conecte Firebase o envíe la agenda para publicarla en GitHub.';
+  let borrar = $('afBorrar'); if(borrar) borrar.remove();
+  if(a){ borrar = document.createElement('button'); borrar.id = 'afBorrar'; borrar.className = 'btn danger'; borrar.style.cssText = 'margin-top:8px;width:100%;justify-content:center'; borrar.textContent = 'Eliminar actividad'; borrar.onclick = borrarAgenda; $('afGuardar').after(borrar); }
+  ajustarFormTipo(); $('mAgForm').classList.add('show'); setTimeout(() => $('afTema').focus(), 50);
+}
+$('afX').onclick = () => $('mAgForm').classList.remove('show');
+$('bAgNueva').onclick = () => pedirClave(() => abrirFormAgenda(null));
+$('adEditar').onclick = () => { const a = agActual; $('mAgDet').classList.remove('show'); pedirClave(() => abrirFormAgenda(a)); };
+$('afGuardar').onclick = async () => {
+  const a = { tipo: $('afTipo').value, tema: $('afTema').value.trim(), fecha: $('afFecha').value, hora: $('afHora').value, fin: $('afFin').value, lugar: $('afLugar').value.trim(), notas: $('afNotas').value.trim() };
+  if(a.tipo === 'cap'){ a.relator = $('afRelator').value.trim(); a.asistentes = $('afAsist').value.trim(); }
+  if((a.tipo === 'cap' && !a.tema) || !a.fecha || !a.hora || !a.lugar){ toast('Complete los campos marcados con *'); return; }
+  const btn = $('afGuardar'); btn.disabled = true;
+  try{
+    const prev = agEditando;
+    if(nubeLista && window.Nube.usuario && (!prev || prev.origen === 'nube')){
+      await window.Nube.agenda.guardar({ ...a, id: prev && prev.id, origen: prev && prev.origen }); toast('Actividad publicada para todo el personal');
+    } else {
+      const l = agLocal(), id = prev && prev.origen === 'local' ? prev.id : 'a' + Date.now().toString(36);
+      agLocalSet([...l.filter(x => x.id !== id), { ...a, id }]); toast('Actividad guardada en este equipo');
+    }
+    $('mAgForm').classList.remove('show'); await cargarAgenda();
+  }catch(e){ toast('No se pudo guardar: ' + (e.code || e.message)); }
+  finally{ btn.disabled = false; }
+};
+async function borrarAgenda(){
+  const a = agEditando; if(!a || !confirm('¿Eliminar esta actividad?')) return;
+  try { if(a.origen === 'nube') await window.Nube.agenda.borrar(a.id); else agLocalSet(agLocal().filter(x => x.id !== a.id)); toast('Actividad eliminada'); }
+  catch(e){ toast('No se pudo eliminar: ' + (e.code || e.message)); }
+  $('mAgForm').classList.remove('show'); cargarAgenda();
+}
+
 /* ---------- Inicio ---------- */
 const params = new URLSearchParams(location.search);
 if(params.has('pantalla')){
@@ -1143,6 +1388,8 @@ render();
 actualizarCandado();
 $('bFecha').value = hoyISO();
 cargarBoletines();
+cargarAgenda();
+setInterval(cargarAgenda, 30*60*1000);
 cargarReferencia(true);
 // Actualización automática cada 15 minutos (y cambio de día a medianoche)
 setInterval(() => cargarReferencia(true), 15*60*1000);

@@ -29,6 +29,12 @@ Sin Firebase, los cambios se guardan en el navegador del equipo que edita; use *
 - **+ Cargar boletín** abre una ventana con clave. Con Firebase se publica para todos (archivos en Firestore, sin plan de pago, hasta 15 MB). Sin Firebase queda guardado solo en ese equipo.
 - Formatos: PDF (todas las páginas, también en iPad), imágenes (JPG/PNG) o enlace web.
 
+## Agenda de la semana (panel derecho)
+- Muestra las **capacitaciones** (tema, fecha, hora, lugar, relator, quiénes deben asistir) y las **reuniones de seguridad y Comité Paritario** (lugar, día, hora) de la semana en curso (lunes a domingo).
+- **📅 Ver todas del mes** abre el mes completo, con navegación ◀ ▶ entre meses.
+- Al tocar una actividad se ve el detalle y se puede **agregar al calendario** (Outlook / celular, archivo .ics).
+- **+ Agregar** (con clave). Con Firebase lo ve todo el personal; sin Firebase queda en ese equipo. Agenda publicada para todos sin Firebase: `datos/agenda.json`.
+
 ## Clave de acceso
 - Una sola clave protege **✎ Editar** y **+ Cargar boletín**. El botón **🔒 Bloquear** cierra el acceso.
 - Sin Firebase: la clave se valida con el hash en `firebase-config.js` (`HTP_ACCESO.claveSHA256`). Es una protección básica.
