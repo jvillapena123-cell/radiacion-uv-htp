@@ -177,8 +177,6 @@ body.pdf{background:#fff}
   <button class="btn" id="bRef" title="Carga un pronóstico de referencia (modelo) para el terminal">⟳ Referencia automática</button>
   <button class="btn" id="bEditar">✎ Editar</button>
   <button class="btn" id="bNube" style="display:none">☁ Publicar</button>
-  <button class="btn" id="bExport" title="Respaldo en archivo JSON">⤓ JSON</button>
-  <button class="btn" id="bImport" title="Restaurar desde JSON">⤒ JSON</button>
   <button class="btn primary" id="bPdf">⬇ Descargar PDF</button>
   <input type="file" id="fImport" accept="application/json" hidden>
 </div>
@@ -330,8 +328,13 @@ body.pdf{background:#fff}
     </fieldset>
 
     <fieldset>
-      <legend>Datos</legend>
-      <button class="btn danger" id="bReset">Restablecer valores de fábrica</button>
+      <legend>Respaldo de datos</legend>
+      <div class="mini" style="margin-bottom:8px">Guarda en un archivo todo el tablero (índice, áreas, fotos y medidas) para no perderlo o para pasarlo a otro equipo.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn ghost" id="bExport">💾 Descargar respaldo</button>
+        <button class="btn ghost" id="bImport">📂 Cargar respaldo</button>
+      </div>
+      <div style="margin-top:12px"><button class="btn danger" id="bReset">Restablecer valores de fábrica</button></div>
       <div id="sesionNube" class="mini" style="margin-top:10px"></div>
     </fieldset>
   </div>
@@ -728,8 +731,8 @@ $('bExport').onclick = () => {
 $('bImport').onclick = () => $('fImport').click();
 $('fImport').onchange = async e => {
   const f = e.target.files[0]; if(!f) return;
-  try { S = Object.assign(ESTADO_BASE(), JSON.parse(await f.text())); guardarLocal(); render(); llenarFormulario(); toast('Datos importados'); }
-  catch(err){ toast('Archivo JSON no válido'); }
+  try { S = Object.assign(ESTADO_BASE(), JSON.parse(await f.text())); guardarLocal(); render(); llenarFormulario(); toast('Respaldo cargado'); }
+  catch(err){ toast('El archivo no es un respaldo válido del tablero'); }
   e.target.value = '';
 };
 
