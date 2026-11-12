@@ -573,7 +573,7 @@ const ESTADO_BASE = () => ({
   areas: [
     { id: uid(), nombre: 'Muelle · grúas y frente de descarga', exposicion: 'Alta', detalle: 'Movilizadores, capataz, supervisor de muellaje, grueros y jefe de turno a la intemperie durante la maniobra.', img: 'assets/muelle-grua.jpg' },
     { id: uid(), nombre: 'Bodegas de almacenamiento', exposicion: 'Media', detalle: 'Trabajo bajo techo con exposición en accesos, carguío y patios exteriores de las bodegas.', img: 'assets/bodegas.jpg' },
-    { id: uid(), nombre: 'Canchas de acopio', exposicion: 'Alta', detalle: 'Operación de equipos y tránsito peatonal sin sombra natural.', img: '' },
+    { id: uid(), nombre: 'Canchas de acopio', exposicion: 'Alta', detalle: 'Operación de equipos y tránsito peatonal sin sombra natural.', img: 'assets/cancha-acopio.jpg' },
     { id: uid(), nombre: 'Patio ferroviario · locomotoras', exposicion: 'Alta', detalle: 'Maniobras de locomotoras y carros en vías del terminal; operadores y señaleros a la intemperie.', img: 'assets/locomotora.jpg' },
     { id: uid(), nombre: 'Portería, accesos y romanas', exposicion: 'Media', detalle: 'Control de camiones y pesaje con exposición intermitente.', img: '' }
   ],
@@ -589,7 +589,15 @@ let nubeLista = false;
 
 /* ---------- Persistencia local ---------- */
 function cargarLocal(){
-  try { const r = localStorage.getItem(LS_KEY); return r ? Object.assign(ESTADO_BASE(), JSON.parse(r)) : null; } catch(e){ return null; }
+  try {
+    const r = localStorage.getItem(LS_KEY); if(!r) return null;
+    const e = Object.assign(ESTADO_BASE(), JSON.parse(r));
+    // Completa fotos de fábrica que se agregaron después (sin pisar fotos propias)
+    const base = ESTADO_BASE().areas;
+    (e.areas || []).forEach(a => { if(!a.img){ const d = base.find(x => x.nombre === a.nombre && x.img); if(d) a.img = d.img; } });
+    base.forEach(d => { if(d.img && !(e.areas || []).some(a => a.nombre === d.nombre)) e.areas.push(d); });
+    return e;
+  } catch(e){ return null; }
 }
 function guardarLocal(){
   S.actualizado = new Date().toISOString();
