@@ -3,12 +3,12 @@
 // 2) Copie aquí los valores de "firebaseConfig".
 // Mientras apiKey comience con "TU_", el tablero funciona en modo local (sin nube).
 window.FIREBASE_CONFIG = {
-  apiKey: "TU_API_KEY",
-  authDomain: "TU_PROYECTO.firebaseapp.com",
-  projectId: "TU_PROYECTO",
-  storageBucket: "TU_PROYECTO.appspot.com",
-  messagingSenderId: "000000000000",
-  appId: "TU_APP_ID"
+  apiKey: "AIzaSyBEiVXBkuHhJjOxs0LpaC4JitxL_q3rWgU",
+  authDomain: "htp-radiacion-uv.firebaseapp.com",
+  projectId: "htp-radiacion-uv",
+  storageBucket: "htp-radiacion-uv.firebasestorage.app",
+  messagingSenderId: "843290153668",
+  appId: "1:843290153668:web:2cc4fbfb45c2b44616af91"
 };
 
 // ===== Clave de acceso para ✎ Editar y + Cargar boletín =====
