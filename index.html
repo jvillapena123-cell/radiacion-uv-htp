@@ -9,6 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="assets/js/html2canvas.min.js" defer></script>
 <script src="assets/js/jspdf.umd.min.js" defer></script>
+<script src="assets/js/pdf.min.js" defer></script>
 <script src="firebase-config.js"></script>
 <style>
 :root{
@@ -36,7 +37,53 @@ button,input,select,textarea{font-family:inherit}
 .btn.danger{background:#fbe5e5;color:#b3261e}
 
 /* ---------- Reporte ---------- */
-#reporte{max-width:1180px;margin:22px auto;padding:0 18px 40px}
+/* Distribución: panel de boletines + reporte */
+.layout{max-width:1560px;margin:22px auto;padding:0 18px 40px;display:grid;grid-template-columns:330px minmax(0,1180px);gap:22px;align-items:start;justify-content:center}
+#reporte{min-width:0}
+.side{position:sticky;top:76px}
+.side-card{padding:18px 16px;display:flex;flex-direction:column;max-height:calc(100vh - 100px)}
+.side-card h2{margin-bottom:10px}
+.side-top{display:flex;align-items:center;justify-content:space-between}
+.side-top .count{background:var(--orange);color:#fff;font-weight:800;font-size:12px;border-radius:999px;padding:3px 9px;margin-bottom:10px}
+.side-sub{font-size:12px;color:var(--muted);margin:-4px 0 10px;line-height:1.4}
+.side-search{width:100%;border:1.5px solid var(--line);border-radius:8px;padding:9px 10px;font-size:13px;margin-bottom:10px}
+.side-search:focus{outline:none;border-color:var(--navy)}
+.bol-filtros{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.bol-filtros button{border:1.5px solid var(--line);background:#fff;color:var(--navy);font-size:11px;font-weight:700;border-radius:999px;padding:5px 10px;cursor:pointer}
+.bol-filtros button.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.bol-list{overflow:auto;display:flex;flex-direction:column;gap:12px;padding:8px 2px 2px 0;flex:1;min-height:80px}
+.bol{display:flex;gap:11px;align-items:center;text-align:left;width:100%;border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px 11px;cursor:pointer;transition:all .15s;font-family:inherit;position:relative}
+.bol:hover{border-color:var(--navy);box-shadow:0 3px 10px rgba(31,58,110,.12);transform:translateY(-1px)}
+.bol-ic{flex:0 0 40px;height:46px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:800}
+.bol-ic small{font-size:8.5px;letter-spacing:.5px;margin-top:2px}
+.bol-tx{flex:1;min-width:0}
+.bol-tx b{display:block;font-size:13px;color:var(--ink);line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.bol-tx small{display:block;font-size:11px;color:var(--muted);margin-top:3px;font-weight:600}
+.bol .nuevo{position:absolute;top:-6px;right:8px;background:var(--orange);color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;letter-spacing:.5px}
+.bol .local{font-size:9.5px;color:#8a4b00;font-weight:700}
+.bol-vacio{font-size:12.5px;color:var(--muted);text-align:center;padding:24px 8px;border:1.5px dashed var(--line);border-radius:12px}
+.side-card .btn.dark{margin-top:12px;justify-content:center}
+
+/* Visor de boletines */
+.visor{position:fixed;inset:0;z-index:150;background:rgba(10,20,40,.6);display:none;align-items:center;justify-content:center;padding:18px}
+.visor.show{display:flex}
+.visor-box{background:#fff;border-radius:16px;width:min(980px,100%);height:min(92vh,1100px);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.visor-box header{background:var(--navy);color:#fff;padding:14px 18px;display:flex;gap:12px;align-items:flex-start;justify-content:space-between}
+.visor-box header .vcat{display:inline-block;background:var(--orange);font-size:10.5px;font-weight:800;letter-spacing:.5px;padding:3px 8px;border-radius:5px;text-transform:uppercase}
+.visor-box header h3{margin:6px 0 2px;font-size:18px;line-height:1.25}
+.visor-box header small{opacity:.8;font-size:12px}
+.visor-box .vdesc{padding:10px 18px;font-size:13px;color:var(--muted);border-bottom:1px solid var(--line);background:#f7f9fc}
+.visor-body{flex:1;overflow:auto;background:#525a6b;padding:14px;display:flex;flex-direction:column;align-items:center;gap:12px;-webkit-overflow-scrolling:touch}
+.visor-body canvas,.visor-body img{max-width:100%;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.35);border-radius:2px}
+.visor-body iframe{width:100%;flex:1;border:0;background:#fff;border-radius:4px;min-height:60vh}
+.visor-body .cargando{color:#fff;font-weight:600;font-size:14px;margin:auto}
+.visor-box footer{padding:12px 18px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;border-top:1px solid var(--line)}
+.visor-box footer .btn{text-decoration:none}
+.bol-ed{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-top:8px;font-size:12.5px}
+.bol-ed span{flex:1;min-width:0}
+.bol-ed small{display:block;color:var(--muted);font-size:11px}
+
+#reporte{padding:0}
 .head{display:flex;align-items:center;justify-content:space-between;gap:20px;background:#fff;border-radius:16px;padding:18px 26px;border-top:6px solid var(--navy);box-shadow:0 1px 3px rgba(20,40,80,.08)}
 .head img.logo{height:58px}
 .head .ttl{text-align:right}
@@ -142,16 +189,24 @@ svg text{font-family:'Montserrat',sans-serif}
 
 /* Modo pantalla (TV / sala VIT) */
 body.pantalla .toolbar{display:none}
-body.pantalla #reporte{max-width:1500px}
+body.pantalla .layout{max-width:1900px;grid-template-columns:360px minmax(0,1fr)}
 
 /* Modo PDF */
 body.pdf .toolbar,body.pdf .no-pdf{display:none!important}
+body.pdf .layout{display:block;max-width:none;margin:0;padding:0}
 body.pdf #reporte{width:1120px;max-width:1120px;margin:0;padding:0}
 body.pdf #pag1,body.pdf #pag2{padding:8px 0;background:#fff}
 body.pdf #pag2 .grid{margin-top:0}
 body.pdf .card{box-shadow:none;border:1px solid var(--line)}
 body.pdf{background:#fff}
 
+@media (max-width:1320px){
+  .layout{grid-template-columns:1fr;max-width:1180px}
+  .side{position:static}
+  .side-card{max-height:none}
+  .bol-list{flex-direction:row;overflow-x:auto;padding-bottom:6px}
+  .bol{flex:0 0 270px}
+}
 @media (max-width:900px){
   .span-8,.span-7,.span-5,.span-4,.span-6{grid-column:span 12}
   .hero{grid-template-columns:1fr}
@@ -161,7 +216,8 @@ body.pdf{background:#fff}
   .head{flex-direction:column;text-align:center}.head .ttl{text-align:center}
 }
 @media print{
-  .toolbar,.no-pdf,.drawer,.backdrop{display:none!important}
+  .toolbar,.no-pdf,.drawer,.backdrop,.visor{display:none!important}
+  .layout{display:block;margin:0;padding:0}
   body{background:#fff}
   #reporte{max-width:none;margin:0;padding:0}
   .card{box-shadow:none;border:1px solid var(--line)}
@@ -182,6 +238,17 @@ body.pdf{background:#fff}
 </div>
 
 <!-- ====== Reporte (lo que se ve y se exporta a PDF) ====== -->
+<div class="layout">
+<aside class="side no-pdf" id="side">
+  <div class="card side-card">
+    <div class="side-top"><h2>Boletines de seguridad</h2><span class="count" id="bolCount">0</span></div>
+    <div class="side-sub">Toque un boletín para verlo, descargarlo o cerrarlo.</div>
+    <input class="side-search" id="bolBuscar" type="search" placeholder="Buscar boletín…">
+    <div class="bol-filtros" id="bolFiltros"></div>
+    <div class="bol-list" id="bolLista"><div class="bol-vacio">Cargando boletines…</div></div>
+    <button class="btn dark" id="bBolNuevo">+ Cargar boletín</button>
+  </div>
+</aside>
 <main id="reporte">
  <div id="pag1">
   <section class="head">
@@ -264,6 +331,24 @@ body.pdf{background:#fff}
   </div>
  </div>
 </main>
+</div>
+
+<!-- Visor de boletines -->
+<div class="visor" id="visor" aria-modal="true" role="dialog">
+  <div class="visor-box">
+    <header>
+      <div><span class="vcat" id="vbCat"></span><h3 id="vbTit"></h3><small id="vbMeta"></small></div>
+      <button class="btn" id="vbX" aria-label="Cerrar">✕</button>
+    </header>
+    <div class="vdesc" id="vbDesc"></div>
+    <div class="visor-body" id="vbBody"></div>
+    <footer>
+      <a class="btn ghost" id="vbAbrir" target="_blank" rel="noopener">Abrir en pestaña nueva ↗</a>
+      <a class="btn primary" id="vbBajar">⬇ Descargar</a>
+      <button class="btn dark" id="vbCerrar">Cerrar</button>
+    </footer>
+  </div>
+</div>
 
 <!-- ====== Panel de edición ====== -->
 <div class="backdrop" id="backdrop"></div>
@@ -291,6 +376,21 @@ body.pdf{background:#fff}
     <fieldset>
       <legend>Mensaje del día</legend>
       <textarea id="iNota" placeholder="Ej.: Faena de descarga en Sitio Norte entre 12:00 y 16:00 — reforzar pausas a la sombra."></textarea>
+    </fieldset>
+
+    <fieldset id="fsBoletines">
+      <legend>Boletines de seguridad</legend>
+      <label>Título</label><input id="bTit" placeholder="Ej.: Alerta — trabajo en altura en grúas">
+      <div class="row2">
+        <div><label>Tipo</label><select id="bCat"><option>Boletín de seguridad</option><option>Alerta de seguridad</option><option>Lección aprendida</option><option>Procedimiento / Instructivo</option><option>Difusión</option></select></div>
+        <div><label>Fecha</label><input type="date" id="bFecha"></div>
+      </div>
+      <label>Descripción breve (opcional)</label><input id="bDescr">
+      <label>Archivo PDF o imagen</label><input type="file" id="bArchivo" accept="application/pdf,image/*">
+      <label>…o enlace (SharePoint, OneDrive, web)</label><input id="bUrl" type="url" placeholder="https://">
+      <button class="btn dark" id="bBolGuardar" style="margin-top:10px">Agregar boletín</button>
+      <div class="mini" id="bBolDestino"></div>
+      <div id="bolEdLista"></div>
     </fieldset>
 
     <fieldset>
@@ -366,6 +466,7 @@ if (configurado) {
     const { initializeApp } = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-app.js`);
     const fs = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-firestore.js`);
     const au = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-auth.js`);
+    const st = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-storage.js`);
     const app = initializeApp(cfg);
     const db = fs.getFirestore(app);
     const auth = au.getAuth(app);
@@ -379,6 +480,24 @@ if (configurado) {
         const { areas, ...sinFotos } = estado;
         sinFotos.areas = (areas || []).map(({ img, ...a }) => a);
         await fs.setDoc(fs.doc(db, 'uv_historial', estado.fecha || 'sin-fecha'), sinFotos);
+      },
+      boletines: {
+        async listar() { const q = await fs.getDocs(fs.collection(db, 'boletines')); return q.docs.map(d => ({ ...d.data(), id: d.id, origen: 'nube' })); },
+        async subir(meta, archivo) {
+          const id = 'b' + Date.now().toString(36);
+          if (archivo) {
+            const ruta = `boletines/${id}-${archivo.name.replace(/[^\w.\-]+/g, '_')}`;
+            const ref = st.ref(st.getStorage(app), ruta);
+            await st.uploadBytes(ref, archivo, { contentType: archivo.type });
+            meta.archivo = await st.getDownloadURL(ref); meta.ruta = ruta; meta.nombreArchivo = archivo.name;
+          }
+          await fs.setDoc(fs.doc(db, 'boletines', id), meta);
+          return id;
+        },
+        async borrar(b) {
+          if (b.ruta) { try { await st.deleteObject(st.ref(st.getStorage(app), b.ruta)); } catch (e) { console.warn(e); } }
+          await fs.deleteDoc(fs.doc(db, 'boletines', b.id));
+        }
       },
       login: (e, p) => au.signInWithEmailAndPassword(auth, e, p),
       logout: () => au.signOut(auth)
@@ -711,8 +830,9 @@ $('bNube').onclick = async () => {
 window.addEventListener('nube-lista', async () => {
   nubeLista = true; $('bNube').style.display = ''; $('dotNube').classList.add('on'); $('estadoNube').textContent = '· Firebase conectado';
   await traerDeNube(true);
+  cargarBoletines();
 });
-window.addEventListener('nube-auth', e => { $('sesionNube').innerHTML = e.detail ? `Sesión: <b>${esc(e.detail)}</b> · <a href="#" id="aSalir">cerrar sesión</a>` : 'Sin sesión en Firebase.';
+window.addEventListener('nube-auth', e => { if(typeof pintarBolEd === 'function') pintarBolEd(); $('sesionNube').innerHTML = e.detail ? `Sesión: <b>${esc(e.detail)}</b> · <a href="#" id="aSalir">cerrar sesión</a>` : 'Sin sesión en Firebase.';
   const a = $('aSalir'); if(a) a.onclick = ev => { ev.preventDefault(); window.Nube.logout(); cerrarPanel(); }; });
 window.addEventListener('nube-error', () => { $('estadoNube').textContent = '· sin conexión a Firebase (modo local)'; });
 
@@ -785,6 +905,151 @@ $('bPdf').onclick = async () => {
   finally{ restaurar(); document.body.classList.remove('pdf'); btn.textContent = '⬇ Descargar PDF'; btn.disabled = false; render(); window.scrollTo(0, y0); }
 };
 
+/* ---------- Boletines de seguridad ---------- */
+const CAT_COLOR = { 'Boletín de seguridad':'#1F3A6E', 'Alerta de seguridad':'#D8001D', 'Lección aprendida':'#E8804A', 'Procedimiento / Instructivo':'#2E7D5B', 'Difusión':'#6B49C8' };
+const IDB = {
+  db: null,
+  abrir(){ return new Promise((ok, ko) => {
+    if(this.db) return ok(this.db);
+    if(!window.indexedDB) return ko(new Error('Sin IndexedDB'));
+    const r = indexedDB.open('uvhtp', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('boletines', { keyPath:'id' });
+    r.onsuccess = () => { this.db = r.result; ok(this.db); };
+    r.onerror = () => ko(r.error);
+  }); },
+  async op(modo, fn){ const db = await this.abrir(); return new Promise((ok, ko) => { const q = fn(db.transaction('boletines', modo).objectStore('boletines')); q.onsuccess = () => ok(q.result); q.onerror = () => ko(q.error); }); },
+  todos(){ return this.op('readonly', o => o.getAll()); },
+  poner(b){ return this.op('readwrite', o => o.put(b)); },
+  borrar(id){ return this.op('readwrite', o => o.delete(id)); }
+};
+let BOL = [], bolFiltro = 'Todos', visorURL = null, visorToken = 0;
+
+function tipoDe(b){
+  if(b.tipo) return b.tipo;
+  const n = (b.nombreArchivo || b.archivo || '').toLowerCase().split('?')[0];
+  if(b.blob) return b.blob.type === 'application/pdf' ? 'pdf' : 'img';
+  if(/\.pdf$/.test(n) || /%2f[^?]*\.pdf/.test(n)) return 'pdf';
+  if(/\.(png|jpe?g|gif|webp)$/.test(n)) return 'img';
+  return 'link';
+}
+async function cargarBoletines(){
+  const lista = [];
+  try { const r = await fetch('boletines/boletines.json', { cache:'no-store' }); if(r.ok) (await r.json()).forEach(b => lista.push({ ...b, origen:'sitio' })); } catch(e){}
+  if(nubeLista){ try { lista.push(...await window.Nube.boletines.listar()); } catch(e){ console.warn('boletines nube', e); } }
+  try { (await IDB.todos()).forEach(b => lista.push({ ...b, origen:'local' })); } catch(e){}
+  BOL = lista.sort((a,b) => (b.fecha || '').localeCompare(a.fecha || ''));
+  renderBoletines(); pintarBolEd();
+}
+function renderBoletines(){
+  const cats = ['Todos', ...new Set(BOL.map(b => b.categoria).filter(Boolean))];
+  if(!cats.includes(bolFiltro)) bolFiltro = 'Todos';
+  $('bolFiltros').innerHTML = cats.length > 2 ? cats.map(c => `<button class="${c===bolFiltro?'on':''}" data-cat="${esc(c)}">${esc(c==='Todos'?'Todos':c.split(' ')[0])}</button>`).join('') : '';
+  const q = $('bolBuscar').value.trim().toLowerCase();
+  const vis = BOL.filter(b => (bolFiltro === 'Todos' || b.categoria === bolFiltro) && (!q || `${b.titulo} ${b.descripcion||''} ${b.categoria||''}`.toLowerCase().includes(q)));
+  $('bolCount').textContent = BOL.length;
+  const hoy = new Date(hoyISO()+'T12:00:00');
+  $('bolLista').innerHTML = vis.length ? vis.map(b => {
+    const t = tipoDe(b), col = CAT_COLOR[b.categoria] || '#1F3A6E';
+    const dias = b.fecha ? (hoy - new Date(b.fecha+'T12:00:00')) / 864e5 : 99;
+    const f = b.fecha ? new Date(b.fecha+'T12:00:00').toLocaleDateString('es-CL',{day:'2-digit',month:'short',year:'numeric'}) : '';
+    return `<button class="bol" data-id="${esc(b.id)}">
+      ${dias <= 7 && dias >= 0 ? '<span class="nuevo">NUEVO</span>' : ''}
+      <span class="bol-ic" style="background:${col}">${t==='pdf'?'📄':t==='img'?'🖼':'🔗'}<small>${t==='pdf'?'PDF':t==='img'?'IMG':'WEB'}</small></span>
+      <span class="bol-tx"><b>${esc(b.titulo)}</b><small>${esc(b.categoria||'')}${f?' · '+f:''}</small>${b.origen==='local'?'<span class="local">● Solo en este equipo</span>':''}</span>
+    </button>`;
+  }).join('') : `<div class="bol-vacio">${BOL.length ? 'Sin resultados para la búsqueda.' : 'Aún no hay boletines cargados.'}</div>`;
+}
+$('bolLista').addEventListener('click', e => { const b = e.target.closest('.bol'); if(b) abrirBoletin(BOL.find(x => x.id === b.dataset.id)); });
+$('bolFiltros').addEventListener('click', e => { const b = e.target.closest('button'); if(b){ bolFiltro = b.dataset.cat; renderBoletines(); } });
+$('bolBuscar').addEventListener('input', renderBoletines);
+
+async function abrirBoletin(b){
+  if(!b) return;
+  const token = ++visorToken;
+  const t = tipoDe(b);
+  if(visorURL){ URL.revokeObjectURL(visorURL); visorURL = null; }
+  const url = b.blob ? (visorURL = URL.createObjectURL(b.blob)) : b.archivo;
+  $('vbCat').textContent = b.categoria || 'Boletín';
+  $('vbTit').textContent = b.titulo;
+  $('vbMeta').textContent = [b.fecha ? fechaLarga(b.fecha) : '', b.origen === 'local' ? 'Guardado solo en este equipo' : ''].filter(Boolean).join(' · ');
+  $('vbDesc').style.display = b.descripcion ? '' : 'none'; $('vbDesc').textContent = b.descripcion || '';
+  $('vbAbrir').href = url;
+  const bajar = $('vbBajar');
+  bajar.style.display = t === 'link' ? 'none' : '';
+  bajar.href = url; bajar.download = b.nombreArchivo || (url.split('/').pop().split('?')[0]) || 'boletin';
+  const body = $('vbBody'); body.innerHTML = '<div class="cargando">Cargando…</div>';
+  $('visor').classList.add('show'); document.body.style.overflow = 'hidden';
+  try{
+    if(t === 'img'){ body.innerHTML = `<img src="${esc(url)}" alt="${esc(b.titulo)}">`; return; }
+    if(t === 'link'){ body.innerHTML = `<iframe src="${esc(url)}" title="${esc(b.titulo)}"></iframe><div class="mini" style="color:#fff">Si el contenido no se muestra, use “Abrir en pestaña nueva”.</div>`; return; }
+    if(!window.pdfjsLib) throw new Error('visor PDF no disponible');
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'assets/js/pdf.worker.min.js';
+    const src = b.blob ? { data: new Uint8Array(await b.blob.arrayBuffer()) } : { url };
+    const pdf = await pdfjsLib.getDocument(src).promise;
+    if(token !== visorToken) return;
+    body.innerHTML = '';
+    const ancho = Math.min(body.clientWidth - 28, 900), dpr = Math.min(window.devicePixelRatio || 1, 2);
+    for(let p = 1; p <= pdf.numPages; p++){
+      const page = await pdf.getPage(p);
+      if(token !== visorToken) return;
+      const v1 = page.getViewport({ scale: 1 }), vp = page.getViewport({ scale: (ancho / v1.width) * dpr });
+      const cv = document.createElement('canvas'); cv.width = vp.width; cv.height = vp.height; cv.style.width = ancho + 'px';
+      body.appendChild(cv);
+      await page.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+    }
+  }catch(e){
+    console.warn(e);
+    if(token === visorToken) body.innerHTML = `<iframe src="${esc(url)}" title="${esc(b.titulo)}"></iframe>`;
+  }
+}
+function cerrarVisor(){
+  visorToken++; $('visor').classList.remove('show'); $('vbBody').innerHTML = ''; document.body.style.overflow = '';
+  if(visorURL){ URL.revokeObjectURL(visorURL); visorURL = null; }
+}
+$('vbX').onclick = cerrarVisor; $('vbCerrar').onclick = cerrarVisor;
+$('visor').addEventListener('click', e => { if(e.target.id === 'visor') cerrarVisor(); });
+document.addEventListener('keydown', e => { if(e.key === 'Escape'){ if($('visor').classList.contains('show')) cerrarVisor(); else cerrarPanel(); } });
+
+function pintarBolEd(){
+  const dest = (nubeLista && window.Nube.usuario) ? 'Se publicará en Firebase: lo verá todo el personal.' : 'Se guardará solo en este equipo. Para que lo vea todo el personal, conecte Firebase o envíe el PDF para publicarlo en GitHub.';
+  $('bBolDestino').textContent = dest;
+  $('bolEdLista').innerHTML = BOL.map(b => `<div class="bol-ed"><span><b>${esc(b.titulo)}</b><small>${esc(b.categoria||'')} · ${esc(b.fecha||'')} · ${b.origen==='sitio'?'publicado en GitHub':b.origen==='nube'?'Firebase':'solo este equipo'}</small></span>
+    ${b.origen==='sitio' ? '' : `<button class="btn danger" data-bborrar="${esc(b.id)}">Eliminar</button>`}</div>`).join('');
+}
+$('bolEdLista').addEventListener('click', async e => {
+  const btn = e.target.closest('[data-bborrar]'); if(!btn) return;
+  const b = BOL.find(x => x.id === btn.dataset.bborrar); if(!b || !confirm(`¿Eliminar el boletín “${b.titulo}”?`)) return;
+  try { if(b.origen === 'nube') await window.Nube.boletines.borrar(b); else await IDB.borrar(b.id); toast('Boletín eliminado'); }
+  catch(err){ toast('No se pudo eliminar: ' + (err.code || err.message)); }
+  cargarBoletines();
+});
+$('bBolGuardar').onclick = async () => {
+  const titulo = $('bTit').value.trim(), archivo = $('bArchivo').files[0], enlace = $('bUrl').value.trim();
+  if(!titulo){ toast('Escriba el título del boletín'); $('bTit').focus(); return; }
+  if(!archivo && !enlace){ toast('Seleccione un archivo PDF/imagen o escriba un enlace'); return; }
+  if(archivo && archivo.size > 20*1024*1024){ toast('El archivo supera 20 MB'); return; }
+  const meta = { titulo, categoria: $('bCat').value, fecha: $('bFecha').value || hoyISO(), descripcion: $('bDescr').value.trim() };
+  if(archivo){ meta.tipo = archivo.type === 'application/pdf' ? 'pdf' : 'img'; meta.nombreArchivo = archivo.name; }
+  else { meta.archivo = enlace; meta.tipo = /\.pdf(\?|$)/i.test(enlace) ? 'pdf' : 'link'; }
+  const btn = $('bBolGuardar'); btn.disabled = true; btn.textContent = 'Guardando…';
+  try{
+    if(nubeLista && window.Nube.usuario){
+      try { await window.Nube.boletines.subir(meta, archivo); toast('Boletín publicado para todo el personal'); }
+      catch(err){ console.warn(err); await IDB.poner({ ...meta, id: 'l' + Date.now().toString(36), blob: archivo || null }); toast('No se pudo subir a Firebase (' + (err.code || 'error') + '). Quedó guardado en este equipo.'); }
+    } else {
+      await IDB.poner({ ...meta, id: 'l' + Date.now().toString(36), blob: archivo || null });
+      toast('Boletín guardado en este equipo');
+    }
+    ['bTit','bDescr','bUrl','bArchivo'].forEach(id => $(id).value = ''); $('bFecha').value = hoyISO();
+    await cargarBoletines();
+  }catch(err){ toast('No se pudo guardar el boletín: ' + err.message); }
+  finally{ btn.disabled = false; btn.textContent = 'Agregar boletín'; }
+};
+$('bBolNuevo').onclick = () => {
+  if(nubeLista && !window.Nube.usuario){ $('mLogin').classList.add('show'); return; }
+  abrirPanel(); setTimeout(() => { $('fsBoletines').scrollIntoView({ behavior:'smooth', block:'start' }); $('bTit').focus(); }, 280);
+};
+
 /* ---------- Inicio ---------- */
 const params = new URLSearchParams(location.search);
 if(params.has('pantalla')){
@@ -795,6 +1060,8 @@ if(params.has('pantalla')){
 if(S.fecha !== hoyISO()){ S.fecha = hoyISO(); S.iuv = null; S.origen = null; S.iuvObs = null; S.nota = ''; }
 bindFormulario();
 render();
+$('bFecha').value = hoyISO();
+cargarBoletines();
 if(S.origen !== 'dmc' || S.horarioFecha !== S.fecha) cargarReferencia(true);
 })();
 </script>

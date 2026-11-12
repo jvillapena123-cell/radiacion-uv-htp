@@ -13,6 +13,12 @@ Modo pantalla (TV sala VIT / portería): agregar `?pantalla=1` a la URL. Oculta 
 
 Sin Firebase, los cambios se guardan en el navegador del equipo que edita; use **⤓ JSON / ⤒ JSON** como respaldo.
 
+## Boletines de seguridad (panel izquierdo)
+- El personal toca un boletín y se abre en ventana emergente: ver, **Descargar** o **Cerrar**.
+- **Publicados para todos (sin Firebase):** archivos en la carpeta `boletines/` + una entrada en `boletines/boletines.json`.
+- **+ Cargar boletín:** con Firebase y sesión iniciada se publica para todos (requiere Firebase Storage, plan Blaze). Sin Firebase queda guardado solo en ese equipo.
+- Formatos: PDF (todas las páginas, también en iPad), imágenes (JPG/PNG) o enlace web.
+
 ## Publicar en GitHub Pages
 ```bash
 git init && git add . && git commit -m "Tablero UV HTP"
@@ -43,5 +49,6 @@ URL: `https://TU_PROYECTO.web.app`
 ## Archivos
 - `index.html` — tablero completo
 - `firebase-config.js` — credenciales web de Firebase
-- `firestore.rules` — lectura pública, escritura solo usuarios autenticados
+- `firestore.rules` / `storage.rules` — lectura pública, escritura solo usuarios autenticados
+- `boletines/` — boletines publicados y su listado `boletines.json`
 - `assets/` — logo HTP y fotos base
