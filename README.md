@@ -2,10 +2,20 @@
 
 Tablero editable para publicar diariamente el índice UV (D.S. 594 Art. 109 b) con descarga de informe PDF.
 
+## Actualización automática del índice UV
+- GitHub Actions (`.github/workflows/actualizar-uv.yml`) ejecuta `scripts/actualizar_uv.py` cada 30 min entre 06:00 y 21:00 y publica `datos/uv.json`.
+- Fuentes: pronóstico Open-Meteo (modelo CAMS) para Bahía San Vicente + medición de la Red UV de la DMC (estación más cercana) si están los secretos `DMC_USUARIO` y `DMC_TOKEN`.
+- El índice del día publicado es el **mayor** entre pronóstico y medición DMC.
+- El tablero lee esos datos al abrir y cada 15 min; si no hay datos recientes consulta el pronóstico directamente.
+- Corrección manual: ✎ Editar → escribir el índice (queda "INGRESO MANUAL" hasta fin del día) → **↺ Volver a modo automático**.
+
+### Activar la medición DMC
+1. Crear cuenta en https://climatologia.meteochile.gob.cl (Iniciar sesión → registrarse) y obtener el token personal (consultas: portalserviciosclimaticos@meteochile.gob.cl).
+2. GitHub → Settings → Secrets and variables → Actions → New repository secret: `DMC_USUARIO` (correo) y `DMC_TOKEN`.
+
 ## Uso diario
-1. Abrir el tablero → **⟳ Referencia automática** carga pronóstico de 7 días y curva horaria (modelo Open-Meteo) para Bahía San Vicente.
-2. **✎ Editar** → escribir el **índice UV máximo** publicado por la DMC (meteochile.gob.cl). Al escribirlo, el dato queda como oficial y desaparece la etiqueta "Referencia modelo".
-3. Agregar mensaje del día, fotos de muelle / bodegas / canchas y ajustar medidas si corresponde.
+1. Abrir el tablero: el índice UV ya está actualizado.
+2. Opcional: mensaje del día, fotos (📷 Fotos) y boletines.
 4. **☁ Publicar** (si Firebase está configurado) para que todos vean el mismo informe.
 5. **⬇ Descargar PDF** genera `Informe_UV_HTP_AAAA-MM-DD.pdf` en A4.
 

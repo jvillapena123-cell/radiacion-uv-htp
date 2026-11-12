@@ -109,7 +109,7 @@ button,input,select,textarea{font-family:inherit}
 .hero .dato .cat small{display:block;font-size:14px;font-weight:600;letter-spacing:.5px;text-transform:none;margin-top:8px;opacity:.95}
 .hero .dato .meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
 .chip{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);padding:7px 12px;border-radius:999px;font-size:12.5px;font-weight:600}
-.badge-ref{position:absolute;top:18px;right:18px;background:#fff;color:#8a4b00;font-size:11px;font-weight:800;padding:6px 10px;border-radius:6px;letter-spacing:.3px}
+.badge-ref{position:absolute;top:18px;right:18px;background:#fff;color:#1F3A6E;font-size:11px;font-weight:800;padding:6px 10px;border-radius:6px;letter-spacing:.3px}
 .hero .dato.dark-text{color:#2a2a2a}
 .hero .dato.dark-text .chip{background:rgba(0,0,0,.08);border-color:rgba(0,0,0,.18)}
 
@@ -234,7 +234,8 @@ body.pdf{background:#fff}
 <!-- ====== Barra de acciones ====== -->
 <div class="toolbar">
   <div class="tt"><span class="dot" id="dotNube" title="Estado conexión Firebase"></span> Tablero Radiación UV · HTP <span id="estadoNube" style="font-weight:500;opacity:.75;font-size:12px"></span></div>
-  <button class="btn" id="bRef" title="Carga un pronóstico de referencia (modelo) para el terminal">⟳ Referencia automática</button>
+  <span id="estadoAuto" style="font-size:12px;opacity:.85;font-weight:600"></span>
+  <button class="btn" id="bRef" title="Actualizar ahora">⟳</button>
   <button class="btn" id="bFotos" title="Actualizar fotos del terminal (requiere clave)">📷 Fotos</button>
   <button class="btn" id="bEditar">✎ Editar</button>
   <button class="btn" id="bBloquear" style="display:none" title="Cerrar sesión de edición">🔒 Bloquear</button>
@@ -270,7 +271,7 @@ body.pdf{background:#fff}
     <section class="card hero span-12" id="hero">
       <div class="foto" id="heroFoto"><div class="cap" id="heroCap"></div></div>
       <div class="dato" id="heroDato">
-        <span class="badge-ref" id="badgeRef" style="display:none">REFERENCIA MODELO · CONFIRMAR CON DMC</span>
+        <span class="badge-ref" id="badgeRef" style="display:none"></span>
         <div class="lbl">Índice UV máximo estimado para hoy</div>
         <div class="valor">
           <div class="num" id="vIuv">—</div>
@@ -361,7 +362,7 @@ body.pdf{background:#fff}
   <header><b>Editar tablero UV</b><button class="btn" id="bCerrar">✕ Cerrar</button></header>
   <div class="body">
     <fieldset>
-      <legend>Dato del día (DMC)</legend>
+      <legend>Dato del día</legend>
       <div class="row2">
         <div><label>Fecha</label><input type="date" id="iFecha"></div>
         <div><label>Índice UV máx. pronosticado</label><input type="number" min="0" max="20" step="1" id="iIuv"></div>
@@ -371,7 +372,8 @@ body.pdf{background:#fff}
         <div><label>IUV observado (opcional)</label><input type="number" min="0" max="20" step="0.1" id="iObs"></div>
       </div>
       <label>Estación / zona de referencia</label><input id="iEst">
-      <div class="mini">Copie el índice UV máximo pronosticado desde la Dirección Meteorológica de Chile. Al escribirlo aquí, el dato queda marcado como oficial (DMC).</div>
+      <div class="mini">El índice se actualiza <b>automáticamente</b> cada 30 minutos (pronóstico + medición DMC). Escriba un valor aquí solo si necesita corregirlo: quedará fijo como ingreso manual hasta el fin del día.</div>
+      <button class="btn ghost" id="bAuto" style="margin-top:8px">↺ Volver a modo automático</button>
       <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
         <a class="btn ghost" id="aDmc" href="https://www.meteochile.gob.cl/" target="_blank" rel="noopener">Abrir meteochile.gob.cl ↗</a>
         <a class="btn ghost" href="https://climatologia.meteochile.gob.cl/" target="_blank" rel="noopener">Climatología DMC ↗</a>
@@ -561,8 +563,10 @@ const ESTADO_BASE = () => ({
   lugar: 'Huachipato Terminal Portuario · Bahía San Vicente, Talcahuano',
   estacion: 'Concepción / Talcahuano',
   iuv: null,
-  origen: null,           // 'dmc' | 'modelo'
+  origen: null,           // 'auto' | 'dmc' (manual)
   iuvObs: null,
+  dmcObs: null,
+  autoHora: null,
   hora: '11:00 – 16:00',
   nota: '',
   fuente: 'Dirección Meteorológica de Chile (DMC)',
@@ -639,9 +643,13 @@ function render(){
   $('vCatTxt').textContent = n ? n.txt : 'Ingrese el índice publicado por la DMC (✎ Editar)';
   $('vHora').textContent = '☀ Mayor radiación: ' + (S.hora || '—');
   $('vEst').textContent = '📍 ' + (S.estacion || '—');
-  $('vObs').style.display = S.iuvObs ? '' : 'none';
-  $('vObs').textContent = 'Observado: ' + S.iuvObs;
-  $('badgeRef').style.display = (S.origen === 'modelo' && v !== null) ? '' : 'none';
+  const dmc = S.dmcObs && S.dmcObs.maximo != null ? S.dmcObs : null;
+  $('vObs').style.display = (dmc || S.iuvObs) ? '' : 'none';
+  $('vObs').textContent = dmc ? `📡 Medido DMC ${dmc.estacion ? '(' + dmc.estacion + ')' : ''}: máx. ${dmc.maximo} a las ${dmc.horaMaximo}` : 'Observado: ' + S.iuvObs;
+  const hAct = S.autoHora ? new Date(S.autoHora).toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}) : '';
+  $('badgeRef').style.display = v !== null ? '' : 'none';
+  $('badgeRef').textContent = S.origen === 'dmc' ? 'INGRESO MANUAL' : `⟳ AUTOMÁTICO${hAct ? ' · ' + hAct : ''}`;
+  $('estadoAuto').textContent = S.origen === 'dmc' ? 'Índice manual' : (hAct ? 'Actualizado ' + hAct : '');
 
   $('heroFoto').style.backgroundImage = S.heroImg ? `url("${S.heroImg}")` : 'none';
   $('heroCap').textContent = S.heroCap || '';
@@ -674,7 +682,7 @@ function render(){
     </div>`;
   }).join('');
 
-  $('vFuente').textContent = S.fuente;
+  $('vFuente').textContent = S.origen === 'auto' ? ('Pronóstico Open-Meteo (CAMS)' + (dmc ? ' · Medición Red UV Dirección Meteorológica de Chile' : '') + ' · índice del día = mayor valor') : S.fuente;
   $('vFuenteUrl').innerHTML = S.fuenteUrl ? `<a href="${esc(S.fuenteUrl)}" target="_blank" rel="noopener">${esc(S.fuenteUrl.replace(/^https?:\/\//,''))}</a>` : '';
   $('vResp').textContent = S.responsable;
   $('vAct').textContent = S.actualizado ? new Date(S.actualizado).toLocaleString('es-CL',{dateStyle:'short',timeStyle:'short'}) : '—';
@@ -689,7 +697,7 @@ function shade(hex, pct){
 /* ---------- Gráfico pronóstico ---------- */
 function renderDias(){
   const datos = S.pronostico.filter(d => d.fecha && d.iuv !== null && d.iuv !== '');
-  if(!datos.length){ $('gDias').innerHTML = '<div class="mini">Sin pronóstico cargado. Use ⟳ Referencia automática o ingréselo en ✎ Editar.</div>'; $('nDias').textContent=''; return; }
+  if(!datos.length){ $('gDias').innerHTML = '<div class="mini">Pronóstico en actualización automática…</div>'; $('nDias').textContent=''; return; }
   const W = 1100, H = 230, pad = {l:40,r:10,t:30,b:46};
   const maxV = Math.max(12, ...datos.map(d => +d.iuv)) ;
   const bw = (W - pad.l - pad.r) / datos.length;
@@ -708,14 +716,14 @@ function renderDias(){
   });
   s += '</svg>';
   $('gDias').innerHTML = s;
-  $('nDias').textContent = S.origenPronostico === 'modelo' ? 'Pronóstico de referencia (modelo numérico Open-Meteo / CAMS) para el terminal. El valor oficial del día es el publicado por la DMC.' : 'Valores ingresados según la Dirección Meteorológica de Chile.';
+  $('nDias').textContent = S.origenPronostico === 'modelo' ? 'Pronóstico automático (modelo Open-Meteo / CAMS) para Bahía San Vicente, actualizado cada 30 minutos.' : 'Valores ingresados manualmente.';
 }
 
 /* ---------- Gráfico horario ---------- */
 function renderHora(){
   const datos = (S.horario || []).filter(d => d.h >= 7 && d.h <= 20);
   if(!datos.length || S.horarioFecha !== S.fecha){
-    $('gHora').innerHTML = '<div class="mini" style="padding:30px 0">Curva horaria no disponible para esta fecha. Use ⟳ Referencia automática para cargarla.</div>';
+    $('gHora').innerHTML = '<div class="mini" style="padding:30px 0">Curva horaria en actualización automática…</div>';
     $('nHora').textContent = ''; return;
   }
   const W = 520, H = 250, pad = {l:30,r:8,t:24,b:28};
@@ -732,32 +740,55 @@ function renderHora(){
   });
   s += '</svg>';
   $('gHora').innerHTML = s;
-  $('nHora').textContent = 'Referencia horaria (modelo) para Bahía San Vicente. Barras coloreadas según la escala UV.';
+  $('nHora').textContent = 'Pronóstico horario automático para Bahía San Vicente. Barras coloreadas según la escala UV.';
 }
 
-/* ---------- Referencia automática (Open-Meteo, sin API key) ---------- */
-async function cargarReferencia(silencioso){
-  try{
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${COORD.lat}&longitude=${COORD.lon}&daily=uv_index_max&hourly=uv_index&timezone=America%2FSantiago&forecast_days=7`;
-    const r = await fetch(url); if(!r.ok) throw new Error('HTTP '+r.status);
-    const j = await r.json();
-    S.pronostico = j.daily.time.map((f,i) => ({ fecha: f, iuv: Math.round(j.daily.uv_index_max[i]*10)/10 }));
-    S.origenPronostico = 'modelo';
-    const hoy = S.fecha;
-    S.horario = j.hourly.time.map((t,i) => ({ t, iuv: j.hourly.uv_index[i] })).filter(o => o.t.startsWith(hoy)).map(o => ({ h: +o.t.slice(11,13), iuv: Math.round(o.iuv*10)/10 }));
-    S.horarioFecha = S.horario.length ? hoy : null;
-    // horario de mayor radiación (IUV >= 6 o, si no, >= 3)
-    const umbral = S.horario.some(o => o.iuv >= 6) ? 6 : 3;
-    const altos = S.horario.filter(o => o.iuv >= umbral);
-    if(altos.length && S.origen !== 'dmc') S.hora = `${String(altos[0].h).padStart(2,'0')}:00 – ${String(altos[altos.length-1].h+1).padStart(2,'0')}:00`;
-    const dHoy = S.pronostico.find(d => d.fecha === hoy);
-    if(dHoy && S.origen !== 'dmc'){ S.iuv = Math.round(dHoy.iuv); S.origen = 'modelo'; }
-    guardarLocal(); render(); llenarFormulario();
-    if(!silencioso) toast(S.origen === 'dmc' ? 'Pronóstico y curva horaria actualizados. Se mantuvo el índice DMC ingresado.' : 'Referencia cargada. Confirme el índice del día con la DMC (✎ Editar).');
-  }catch(e){
-    if(!silencioso) toast('No se pudo obtener la referencia automática: ' + e.message);
-  }
+/* ---------- Actualización automática del índice UV ----------
+   1) datos/uv.json: lo genera GitHub Actions cada 30 min (pronóstico + medición DMC).
+   2) Respaldo: si ese archivo no existe o está desactualizado, el navegador consulta el pronóstico directo. */
+function aplicarHorario(lista){
+  S.horario = lista; S.horarioFecha = lista.length ? S.fecha : null;
+  const umbral = lista.some(o => o.iuv >= 6) ? 6 : 3, altos = lista.filter(o => o.iuv >= umbral);
+  if(altos.length && S.origen !== 'dmc') S.hora = `${String(altos[0].h).padStart(2,'0')}:00 – ${String(altos[altos.length-1].h+1).padStart(2,'0')}:00`;
 }
+async function desdeServidor(){
+  const r = await fetch('datos/uv.json?t=' + Date.now(), { cache:'no-store' });
+  if(!r.ok) throw new Error('sin datos/uv.json');
+  const d = await r.json();
+  const edad = Date.now() - new Date(d.generado).getTime();
+  if(d.fecha !== hoyISO() || !(edad < 3*3600e3)) throw new Error('datos/uv.json desactualizado');
+  if(Array.isArray(d.pronostico) && d.pronostico.length){ S.pronostico = d.pronostico; S.origenPronostico = 'modelo'; }
+  if(Array.isArray(d.horario)) aplicarHorario(d.horario);
+  if(d.horaMayor && S.origen !== 'dmc') S.hora = d.horaMayor;
+  S.dmcObs = d.dmc || null;
+  if(d.iuvDia != null && S.origen !== 'dmc'){ S.iuv = d.iuvDia; S.origen = 'auto'; }
+  S.autoHora = d.generado;
+}
+async function desdeNavegador(){
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${COORD.lat}&longitude=${COORD.lon}&daily=uv_index_max&hourly=uv_index&timezone=America%2FSantiago&forecast_days=7`;
+  const r = await fetch(url); if(!r.ok) throw new Error('HTTP '+r.status);
+  const j = await r.json(), hoy = S.fecha;
+  S.pronostico = j.daily.time.map((f,i) => ({ fecha: f, iuv: Math.round(j.daily.uv_index_max[i]*10)/10 }));
+  S.origenPronostico = 'modelo';
+  aplicarHorario(j.hourly.time.map((t,i) => ({ t, iuv: j.hourly.uv_index[i] })).filter(o => o.t.startsWith(hoy)).map(o => ({ h: +o.t.slice(11,13), iuv: Math.round(o.iuv*10)/10 })));
+  const dHoy = S.pronostico.find(d => d.fecha === hoy);
+  const med = S.dmcObs && S.dmcObs.maximo != null ? S.dmcObs.maximo : null;
+  if(dHoy && S.origen !== 'dmc'){ S.iuv = Math.round(Math.max(dHoy.iuv, med ?? 0)); S.origen = 'auto'; }
+  S.autoHora = new Date().toISOString();
+}
+let actualizando = false;
+async function cargarReferencia(silencioso){
+  if(actualizando) return; actualizando = true;
+  if(S.fecha !== hoyISO()) nuevoDia();
+  try{
+    try { await desdeServidor(); } catch(e){ await desdeNavegador(); }
+    guardarLocal(); render(); llenarFormulario();
+    if(!silencioso) toast(S.origen === 'dmc' ? 'Pronóstico actualizado. Se mantiene el índice ingresado manualmente.' : 'Índice UV actualizado automáticamente.');
+  }catch(e){
+    if(!silencioso) toast('No se pudo actualizar ahora; se reintentará automáticamente.');
+  }finally{ actualizando = false; }
+}
+function nuevoDia(){ S.fecha = hoyISO(); S.iuv = null; S.origen = null; S.iuvObs = null; S.dmcObs = null; S.nota = ''; }
 
 /* ---------- Formulario de edición ---------- */
 function llenarFormulario(){
@@ -803,7 +834,7 @@ function cambio(){ guardarLocal(); render(); }
 function bindFormulario(){
   const map = { iFecha:'fecha', iHora:'hora', iEst:'estacion', iNota:'nota', iLugar:'lugar', iFuente:'fuente', iFuenteUrl:'fuenteUrl', iResp:'responsable' };
   Object.entries(map).forEach(([id,k]) => $(id).addEventListener('input', e => { S[k] = e.target.value; cambio(); }));
-  $('iIuv').addEventListener('input', e => { const v = e.target.value; S.iuv = v === '' ? null : Number(v); S.origen = v === '' ? null : 'dmc'; cambio(); });
+  $('iIuv').addEventListener('input', e => { const v = e.target.value; S.iuv = v === '' ? null : Number(v); S.origen = v === '' ? null : 'dmc'; cambio(); if(v === '') cargarReferencia(true); });
   $('iObs').addEventListener('input', e => { S.iuvObs = e.target.value === '' ? null : Number(e.target.value); cambio(); });
   ['bajo','moderado','alto','muy','extremo'].forEach(k => $('m_'+k).addEventListener('input', e => { S.medidas[k] = e.target.value.split('\n').map(x=>x.trim()).filter(Boolean); cambio(); }));
 
@@ -868,6 +899,7 @@ $('bEditar').onclick = () => pedirClave(abrirPanel);
 $('bFotos').onclick = () => pedirClave(() => { abrirPanel(); setTimeout(() => { const f = $('fsAreas'); f.scrollIntoView({ behavior:'smooth', block:'start' }); f.style.boxShadow = '0 0 0 3px #E8804A'; setTimeout(() => f.style.boxShadow = '', 2200); }, 280); });
 $('bCerrar').onclick = cerrarPanel; $('backdrop').onclick = cerrarPanel;
 $('bRef').onclick = () => cargarReferencia(false);
+$('bAuto').onclick = () => { S.origen = null; S.iuvObs = null; cargarReferencia(false); };
 
 /* ---------- Nube ---------- */
 $('bNube').onclick = async () => {
@@ -1100,16 +1132,21 @@ $('bmX').onclick = () => $('mBoletin').classList.remove('show');
 const params = new URLSearchParams(location.search);
 if(params.has('pantalla')){
   document.body.classList.add('pantalla');
-  setInterval(() => { if(nubeLista) traerDeNube(true); else location.reload(); }, 10*60*1000);
+  setInterval(() => { if(nubeLista) traerDeNube(true); }, 10*60*1000);
+  setInterval(() => location.reload(), 6*3600*1000);
 }
 // Si el estado guardado es de otro día, se reinicia el dato diario conservando áreas, fotos y medidas.
-if(S.fecha !== hoyISO()){ S.fecha = hoyISO(); S.iuv = null; S.origen = null; S.iuvObs = null; S.nota = ''; }
+if(S.fecha !== hoyISO()) nuevoDia();
+if(S.origen === 'modelo') S.origen = 'auto';
 bindFormulario();
 render();
 actualizarCandado();
 $('bFecha').value = hoyISO();
 cargarBoletines();
-if(S.origen !== 'dmc' || S.horarioFecha !== S.fecha) cargarReferencia(true);
+cargarReferencia(true);
+// Actualización automática cada 15 minutos (y cambio de día a medianoche)
+setInterval(() => cargarReferencia(true), 15*60*1000);
+document.addEventListener('visibilitychange', () => { if(!document.hidden) cargarReferencia(true); });
 })();
 </script>
 </body>

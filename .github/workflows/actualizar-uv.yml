@@ -1,0 +1,39 @@
+name: Actualizar índice UV
+
+on:
+  schedule:
+    # Cada 30 minutos entre 06:00 y 21:00 hora de Chile (09:00–00:59 UTC)
+    - cron: "5,35 9-23 * * *"
+    - cron: "5,35 0 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: actualizar-uv
+  cancel-in-progress: false
+
+jobs:
+  actualizar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Obtener índice UV (Open-Meteo + DMC)
+        env:
+          DMC_USUARIO: ${{ secrets.DMC_USUARIO }}
+          DMC_TOKEN: ${{ secrets.DMC_TOKEN }}
+        run: python scripts/actualizar_uv.py
+      - name: Publicar datos/uv.json
+        run: |
+          git config user.name "tablero-uv-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add datos/uv.json
+          if git diff --cached --quiet; then echo "Sin cambios"; exit 0; fi
+          git commit -m "Índice UV automático $(TZ=America/Santiago date '+%Y-%m-%d %H:%M')"
+          git pull --rebase origin main
+          git push
