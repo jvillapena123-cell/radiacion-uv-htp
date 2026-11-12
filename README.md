@@ -16,8 +16,13 @@ Sin Firebase, los cambios se guardan en el navegador del equipo que edita; use *
 ## Boletines de seguridad (panel izquierdo)
 - El personal toca un boletín y se abre en ventana emergente: ver, **Descargar** o **Cerrar**.
 - **Publicados para todos (sin Firebase):** archivos en la carpeta `boletines/` + una entrada en `boletines/boletines.json`.
-- **+ Cargar boletín:** con Firebase y sesión iniciada se publica para todos (requiere Firebase Storage, plan Blaze). Sin Firebase queda guardado solo en ese equipo.
+- **+ Cargar boletín** abre una ventana con clave. Con Firebase se publica para todos (archivos en Firestore, sin plan de pago, hasta 15 MB). Sin Firebase queda guardado solo en ese equipo.
 - Formatos: PDF (todas las páginas, también en iPad), imágenes (JPG/PNG) o enlace web.
+
+## Clave de acceso
+- Una sola clave protege **✎ Editar** y **+ Cargar boletín**. El botón **🔒 Bloquear** cierra el acceso.
+- Sin Firebase: la clave se valida con el hash en `firebase-config.js` (`HTP_ACCESO.claveSHA256`). Es una protección básica.
+- Con Firebase: la clave es la contraseña del usuario `editor@htpchile.cl` en Authentication (protección real del servidor).
 
 ## Publicar en GitHub Pages
 ```bash
@@ -32,7 +37,7 @@ URL: `https://jvillapena123-cell.github.io/radiacion-uv-htp/`
 ## Publicar en Firebase Hosting + nube
 1. Crear proyecto en https://console.firebase.google.com
 2. Agregar app Web y copiar la configuración en `firebase-config.js`.
-3. Activar **Firestore Database** y **Authentication → Correo/contraseña**; crear los usuarios que podrán editar (jefes de turno, prevención).
+3. Activar **Firestore Database** y **Authentication → Correo/contraseña**; crear el usuario `editor@htpchile.cl` con la clave de edición.
 4. En Authentication → Configuración → Dominios autorizados, agregar `jvillapena123-cell.github.io` si también se usa GitHub Pages.
 5. Reemplazar `TU_PROYECTO` en `.firebaserc` y desplegar:
 ```bash
@@ -49,6 +54,6 @@ URL: `https://TU_PROYECTO.web.app`
 ## Archivos
 - `index.html` — tablero completo
 - `firebase-config.js` — credenciales web de Firebase
-- `firestore.rules` / `storage.rules` — lectura pública, escritura solo usuarios autenticados
+- `firestore.rules` — lectura pública, escritura solo usuarios autenticados
 - `boletines/` — boletines publicados y su listado `boletines.json`
 - `assets/` — logo HTP y fotos base

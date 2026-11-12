@@ -1,20 +1,20 @@
 [
   {
     "id": "INFO-2026-11-12",
-    "titulo": "Información importante: caída mundial del correo Microsoft",
-    "categoria": "Difusión",
+    "titulo": "Caída mundial del correo Microsoft",
     "fecha": "2026-11-12",
     "descripcion": "Fallas en notificaciones de Checklist vehículo y F&S, Confirmaciones (CdR, CdP), WRAC Digital y Hoja de ruta. Se informará cuando se restablezcan los servicios. Gerencia Seguridad y Salud Ocupacional.",
     "archivo": "boletines/INFO-2026-11-12_Caida_correo_Microsoft.jpg",
-    "tipo": "img"
+    "tipo": "img",
+    "numero": "Información importante"
   },
   {
     "id": "BS-01-2026",
     "titulo": "Protección frente a radiación UV",
-    "categoria": "Boletín de seguridad",
     "fecha": "2026-11-12",
     "descripcion": "Medidas de control según el índice UV del día, EPP obligatorio y rol del jefe de turno en la VIT.",
     "archivo": "boletines/BS-01-2026_Proteccion_Radiacion_UV.pdf",
-    "tipo": "pdf"
+    "tipo": "pdf",
+    "numero": "BS-01-2026"
   }
 ]

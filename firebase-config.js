@@ -10,3 +10,11 @@ window.FIREBASE_CONFIG = {
   messagingSenderId: "000000000000",
   appId: "TU_APP_ID"
 };
+
+// ===== Clave de acceso para ✎ Editar y + Cargar boletín =====
+// Sin Firebase: se compara contra este hash (para cambiar la clave, pida el nuevo hash).
+// Con Firebase: la clave es la contraseña del usuario "usuarioFirebase" en Authentication.
+window.HTP_ACCESO = {
+  claveSHA256: "7a5acb1bb55cab9686ef55722d762082e1f66bc0d27c1bf673162b6307d49d60",
+  usuarioFirebase: "editor@htpchile.cl"
+};

@@ -183,6 +183,10 @@ svg text{font-family:'Montserrat',sans-serif}
 .modal .box{background:#fff;border-radius:14px;padding:22px;width:min(380px,92%)}
 .modal .box h3{margin:0 0 10px;color:var(--navy)}
 .modal input{width:100%;border:1.5px solid var(--line);border-radius:8px;padding:10px;margin:6px 0;font-size:14px}
+.modal .box.carga{width:min(560px,94%);max-height:92vh;display:flex;flex-direction:column}
+.carga-body{overflow:auto;margin-top:8px;padding-right:4px}
+.carga-body label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:10px 0 0}
+.carga-body input{margin:4px 0}
 
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(120px);opacity:0;visibility:hidden;background:var(--ink);color:#fff;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:600;z-index:200;transition:transform .25s;max-width:90%}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1;visibility:visible}
@@ -232,6 +236,7 @@ body.pdf{background:#fff}
   <div class="tt"><span class="dot" id="dotNube" title="Estado conexión Firebase"></span> Tablero Radiación UV · HTP <span id="estadoNube" style="font-weight:500;opacity:.75;font-size:12px"></span></div>
   <button class="btn" id="bRef" title="Carga un pronóstico de referencia (modelo) para el terminal">⟳ Referencia automática</button>
   <button class="btn" id="bEditar">✎ Editar</button>
+  <button class="btn" id="bBloquear" style="display:none" title="Cerrar sesión de edición">🔒 Bloquear</button>
   <button class="btn" id="bNube" style="display:none">☁ Publicar</button>
   <button class="btn primary" id="bPdf">⬇ Descargar PDF</button>
   <input type="file" id="fImport" accept="application/json" hidden>
@@ -244,7 +249,6 @@ body.pdf{background:#fff}
     <div class="side-top"><h2>Boletines de seguridad</h2><span class="count" id="bolCount">0</span></div>
     <div class="side-sub">Toque un boletín para verlo, descargarlo o cerrarlo.</div>
     <input class="side-search" id="bolBuscar" type="search" placeholder="Buscar boletín…">
-    <div class="bol-filtros" id="bolFiltros"></div>
     <div class="bol-list" id="bolLista"><div class="bol-vacio">Cargando boletines…</div></div>
     <button class="btn dark" id="bBolNuevo">+ Cargar boletín</button>
   </div>
@@ -378,21 +382,6 @@ body.pdf{background:#fff}
       <textarea id="iNota" placeholder="Ej.: Faena de descarga en Sitio Norte entre 12:00 y 16:00 — reforzar pausas a la sombra."></textarea>
     </fieldset>
 
-    <fieldset id="fsBoletines">
-      <legend>Boletines de seguridad</legend>
-      <label>Título</label><input id="bTit" placeholder="Ej.: Alerta — trabajo en altura en grúas">
-      <div class="row2">
-        <div><label>Tipo</label><select id="bCat"><option>Boletín de seguridad</option><option>Alerta de seguridad</option><option>Lección aprendida</option><option>Procedimiento / Instructivo</option><option>Difusión</option></select></div>
-        <div><label>Fecha</label><input type="date" id="bFecha"></div>
-      </div>
-      <label>Descripción breve (opcional)</label><input id="bDescr">
-      <label>Archivo PDF o imagen</label><input type="file" id="bArchivo" accept="application/pdf,image/*">
-      <label>…o enlace (SharePoint, OneDrive, web)</label><input id="bUrl" type="url" placeholder="https://">
-      <button class="btn dark" id="bBolGuardar" style="margin-top:10px">Agregar boletín</button>
-      <div class="mini" id="bBolDestino"></div>
-      <div id="bolEdLista"></div>
-    </fieldset>
-
     <fieldset>
       <legend>Pronóstico próximos días</legend>
       <table class="ftable" id="tDias"></table>
@@ -435,21 +424,42 @@ body.pdf{background:#fff}
         <button class="btn ghost" id="bImport">📂 Cargar respaldo</button>
       </div>
       <div style="margin-top:12px"><button class="btn danger" id="bReset">Restablecer valores de fábrica</button></div>
-      <div id="sesionNube" class="mini" style="margin-top:10px"></div>
+
     </fieldset>
   </div>
 </aside>
 
-<!-- Login Firebase -->
-<div class="modal" id="mLogin">
+<!-- Ventana de clave (edición y carga de boletines) -->
+<div class="modal" id="mClave">
   <div class="box">
-    <h3>Ingresar para editar</h3>
-    <div class="mini" style="margin-bottom:6px">Usuario autorizado en Firebase Authentication.</div>
-    <input type="email" id="lEmail" placeholder="correo@htpchile.cl">
-    <input type="password" id="lPass" placeholder="Contraseña">
+    <h3>🔒 Acceso restringido</h3>
+    <div class="mini" style="margin-bottom:8px" id="clMsg">Ingrese la clave para editar el tablero o cargar boletines.</div>
+    <input type="password" id="clInput" placeholder="Clave" autocomplete="current-password">
+    <div class="mini" id="clError" style="color:#b3261e;display:none">Clave incorrecta.</div>
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
-      <button class="btn ghost" id="lCancel">Cancelar</button>
-      <button class="btn dark" id="lOk">Ingresar</button>
+      <button class="btn ghost" id="clCancel">Cancelar</button>
+      <button class="btn dark" id="clOk">Ingresar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Ventana de carga de boletines -->
+<div class="modal" id="mBoletin">
+  <div class="box carga">
+    <div style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0">Cargar boletín</h3><button class="btn ghost" id="bmX">✕</button></div>
+    <div class="carga-body">
+      <label>Título *</label><input id="bTit" placeholder="Ej.: Trabajo seguro en grúas de muelle">
+      <div class="row2">
+        <div><label>N° boletín</label><input id="bNum" placeholder="BS-02-2026"></div>
+        <div><label>Fecha</label><input type="date" id="bFecha"></div>
+      </div>
+      <label>Descripción breve</label><input id="bDescr" placeholder="Opcional">
+      <label>Archivo PDF o imagen *</label><input type="file" id="bArchivo" accept="application/pdf,image/*">
+      <label>…o enlace (SharePoint, OneDrive, web)</label><input id="bUrl" type="url" placeholder="https://">
+      <button class="btn primary" id="bBolGuardar" style="margin-top:12px;width:100%;justify-content:center">Publicar boletín</button>
+      <div class="mini" id="bBolDestino" style="margin-top:8px"></div>
+      <h4 style="margin:18px 0 4px;color:var(--navy);font-size:13px">Boletines cargados</h4>
+      <div id="bolEdLista"></div>
     </div>
   </div>
 </div>
@@ -466,7 +476,6 @@ if (configurado) {
     const { initializeApp } = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-app.js`);
     const fs = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-firestore.js`);
     const au = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-auth.js`);
-    const st = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-storage.js`);
     const app = initializeApp(cfg);
     const db = fs.getFirestore(app);
     const auth = au.getAuth(app);
@@ -482,24 +491,33 @@ if (configurado) {
         await fs.setDoc(fs.doc(db, 'uv_historial', estado.fecha || 'sin-fecha'), sinFotos);
       },
       boletines: {
+        // Los archivos se guardan en Firestore en partes (sin Firebase Storage → no requiere plan de pago)
         async listar() { const q = await fs.getDocs(fs.collection(db, 'boletines')); return q.docs.map(d => ({ ...d.data(), id: d.id, origen: 'nube' })); },
         async subir(meta, archivo) {
           const id = 'b' + Date.now().toString(36);
           if (archivo) {
-            const ruta = `boletines/${id}-${archivo.name.replace(/[^\w.\-]+/g, '_')}`;
-            const ref = st.ref(st.getStorage(app), ruta);
-            await st.uploadBytes(ref, archivo, { contentType: archivo.type });
-            meta.archivo = await st.getDownloadURL(ref); meta.ruta = ruta; meta.nombreArchivo = archivo.name;
+            const b64 = await new Promise((ok, ko) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1]); r.onerror = ko; r.readAsDataURL(archivo); });
+            const T = 900000, partes = Math.ceil(b64.length / T);
+            for (let i = 0; i < partes; i++) await fs.setDoc(fs.doc(db, 'boletines', id, 'partes', String(i).padStart(3, '0')), { d: b64.slice(i * T, (i + 1) * T) });
+            meta.partes = partes; meta.mime = archivo.type; meta.nombreArchivo = archivo.name;
           }
           await fs.setDoc(fs.doc(db, 'boletines', id), meta);
           return id;
         },
+        async archivo(b) {
+          const q = await fs.getDocs(fs.collection(db, 'boletines', b.id, 'partes'));
+          const b64 = q.docs.sort((x, y) => x.id.localeCompare(y.id)).map(d => d.data().d).join('');
+          const bin = atob(b64), u8 = new Uint8Array(bin.length);
+          for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+          return new Blob([u8], { type: b.mime || 'application/octet-stream' });
+        },
         async borrar(b) {
-          if (b.ruta) { try { await st.deleteObject(st.ref(st.getStorage(app), b.ruta)); } catch (e) { console.warn(e); } }
+          const q = await fs.getDocs(fs.collection(db, 'boletines', b.id, 'partes'));
+          for (const d of q.docs) await fs.deleteDoc(d.ref);
           await fs.deleteDoc(fs.doc(db, 'boletines', b.id));
         }
       },
-      login: (e, p) => au.signInWithEmailAndPassword(auth, e, p),
+      loginClave: (clave) => au.signInWithEmailAndPassword(auth, (window.HTP_ACCESO && window.HTP_ACCESO.usuarioFirebase) || 'editor@htpchile.cl', clave),
       logout: () => au.signOut(auth)
     };
     window.dispatchEvent(new Event('nube-lista'));
@@ -806,21 +824,44 @@ function bindFormulario(){
 /* ---------- Panel ---------- */
 function abrirPanel(){ llenarFormulario(); $('drawer').classList.add('open'); $('backdrop').classList.add('show'); }
 function cerrarPanel(){ $('drawer').classList.remove('open'); $('backdrop').classList.remove('show'); }
-$('bEditar').onclick = () => {
-  if(nubeLista && !window.Nube.usuario){ $('mLogin').classList.add('show'); $('lEmail').focus(); return; }
-  abrirPanel();
+
+/* ---------- Clave de acceso (edición y boletines) ---------- */
+const ACC = window.HTP_ACCESO || {};
+let accionPendiente = null;
+function desbloqueado(){ return nubeLista ? !!window.Nube.usuario : (function(){ try { return sessionStorage.getItem('uvhtp_ok') === '1'; } catch(e){ return false; } })(); }
+function pedirClave(accion){
+  if(desbloqueado()){ accion(); return; }
+  accionPendiente = accion; $('clInput').value = ''; $('clError').style.display = 'none';
+  $('mClave').classList.add('show'); setTimeout(() => $('clInput').focus(), 50);
+}
+async function sha256(t){ const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2,'0')).join(''); }
+async function validarClave(){
+  const c = $('clInput').value; if(!c) return;
+  let ok = false;
+  try{
+    if(nubeLista){ await window.Nube.loginClave(c); ok = true; }
+    else { ok = (await sha256('uvhtp|' + c)) === ACC.claveSHA256; if(ok) try { sessionStorage.setItem('uvhtp_ok','1'); } catch(e){} }
+  }catch(e){ ok = false; }
+  if(!ok){ $('clError').style.display = ''; $('clInput').select(); return; }
+  $('mClave').classList.remove('show'); actualizarCandado();
+  const a = accionPendiente; accionPendiente = null; if(a) a();
+}
+$('clOk').onclick = validarClave;
+$('clInput').addEventListener('keydown', e => { if(e.key === 'Enter') validarClave(); });
+$('clCancel').onclick = () => { $('mClave').classList.remove('show'); accionPendiente = null; };
+function actualizarCandado(){ $('bBloquear').style.display = desbloqueado() ? '' : 'none'; }
+$('bBloquear').onclick = async () => {
+  try { sessionStorage.removeItem('uvhtp_ok'); } catch(e){}
+  if(nubeLista) try { await window.Nube.logout(); } catch(e){}
+  cerrarPanel(); $('mBoletin').classList.remove('show'); actualizarCandado(); toast('Edición bloqueada');
 };
+$('bEditar').onclick = () => pedirClave(abrirPanel);
 $('bCerrar').onclick = cerrarPanel; $('backdrop').onclick = cerrarPanel;
 $('bRef').onclick = () => cargarReferencia(false);
 
-/* ---------- Login / nube ---------- */
-$('lCancel').onclick = () => $('mLogin').classList.remove('show');
-$('lOk').onclick = async () => {
-  try { await window.Nube.login($('lEmail').value.trim(), $('lPass').value); $('mLogin').classList.remove('show'); abrirPanel(); toast('Sesión iniciada'); }
-  catch(e){ toast('No se pudo ingresar: revise correo y contraseña'); }
-};
+/* ---------- Nube ---------- */
 $('bNube').onclick = async () => {
-  if(!window.Nube.usuario){ $('mLogin').classList.add('show'); return; }
+  if(!window.Nube.usuario){ pedirClave(() => $('bNube').click()); return; }
   const tam = new Blob([JSON.stringify(S)]).size;
   if(tam > 950000){ toast('El tablero pesa ' + Math.round(tam/1024) + ' KB: quite o reemplace alguna foto (límite Firestore ~1 MB).'); return; }
   try { $('bNube').textContent = '☁ Publicando…'; S.actualizado = new Date().toISOString(); await window.Nube.guardar(JSON.parse(JSON.stringify(S))); guardarLocal(); render(); toast('Publicado en Firebase: todos los equipos verán este informe.'); }
@@ -832,8 +873,7 @@ window.addEventListener('nube-lista', async () => {
   await traerDeNube(true);
   cargarBoletines();
 });
-window.addEventListener('nube-auth', e => { if(typeof pintarBolEd === 'function') pintarBolEd(); $('sesionNube').innerHTML = e.detail ? `Sesión: <b>${esc(e.detail)}</b> · <a href="#" id="aSalir">cerrar sesión</a>` : 'Sin sesión en Firebase.';
-  const a = $('aSalir'); if(a) a.onclick = ev => { ev.preventDefault(); window.Nube.logout(); cerrarPanel(); }; });
+window.addEventListener('nube-auth', () => { actualizarCandado(); if(typeof pintarBolEd === 'function') pintarBolEd(); });
 window.addEventListener('nube-error', () => { $('estadoNube').textContent = '· sin conexión a Firebase (modo local)'; });
 
 async function traerDeNube(silencioso){
@@ -906,7 +946,6 @@ $('bPdf').onclick = async () => {
 };
 
 /* ---------- Boletines de seguridad ---------- */
-const CAT_COLOR = { 'Boletín de seguridad':'#1F3A6E', 'Alerta de seguridad':'#D8001D', 'Lección aprendida':'#E8804A', 'Procedimiento / Instructivo':'#2E7D5B', 'Difusión':'#6B49C8' };
 const IDB = {
   db: null,
   abrir(){ return new Promise((ok, ko) => {
@@ -922,12 +961,13 @@ const IDB = {
   poner(b){ return this.op('readwrite', o => o.put(b)); },
   borrar(id){ return this.op('readwrite', o => o.delete(id)); }
 };
-let BOL = [], bolFiltro = 'Todos', visorURL = null, visorToken = 0;
+let BOL = [], visorURL = null, visorToken = 0;
 
 function tipoDe(b){
   if(b.tipo) return b.tipo;
   const n = (b.nombreArchivo || b.archivo || '').toLowerCase().split('?')[0];
   if(b.blob) return b.blob.type === 'application/pdf' ? 'pdf' : 'img';
+  if(b.mime) return b.mime === 'application/pdf' ? 'pdf' : 'img';
   if(/\.pdf$/.test(n) || /%2f[^?]*\.pdf/.test(n)) return 'pdf';
   if(/\.(png|jpe?g|gif|webp)$/.test(n)) return 'img';
   return 'link';
@@ -941,26 +981,22 @@ async function cargarBoletines(){
   renderBoletines(); pintarBolEd();
 }
 function renderBoletines(){
-  const cats = ['Todos', ...new Set(BOL.map(b => b.categoria).filter(Boolean))];
-  if(!cats.includes(bolFiltro)) bolFiltro = 'Todos';
-  $('bolFiltros').innerHTML = cats.length > 2 ? cats.map(c => `<button class="${c===bolFiltro?'on':''}" data-cat="${esc(c)}">${esc(c==='Todos'?'Todos':c.split(' ')[0])}</button>`).join('') : '';
   const q = $('bolBuscar').value.trim().toLowerCase();
-  const vis = BOL.filter(b => (bolFiltro === 'Todos' || b.categoria === bolFiltro) && (!q || `${b.titulo} ${b.descripcion||''} ${b.categoria||''}`.toLowerCase().includes(q)));
+  const vis = BOL.filter(b => !q || `${b.titulo} ${b.numero||''} ${b.descripcion||''}`.toLowerCase().includes(q));
   $('bolCount').textContent = BOL.length;
   const hoy = new Date(hoyISO()+'T12:00:00');
   $('bolLista').innerHTML = vis.length ? vis.map(b => {
-    const t = tipoDe(b), col = CAT_COLOR[b.categoria] || '#1F3A6E';
+    const t = tipoDe(b), col = '#1F3A6E';
     const dias = b.fecha ? (hoy - new Date(b.fecha+'T12:00:00')) / 864e5 : 99;
     const f = b.fecha ? new Date(b.fecha+'T12:00:00').toLocaleDateString('es-CL',{day:'2-digit',month:'short',year:'numeric'}) : '';
     return `<button class="bol" data-id="${esc(b.id)}">
       ${dias <= 7 && dias >= 0 ? '<span class="nuevo">NUEVO</span>' : ''}
       <span class="bol-ic" style="background:${col}">${t==='pdf'?'📄':t==='img'?'🖼':'🔗'}<small>${t==='pdf'?'PDF':t==='img'?'IMG':'WEB'}</small></span>
-      <span class="bol-tx"><b>${esc(b.titulo)}</b><small>${esc(b.categoria||'')}${f?' · '+f:''}</small>${b.origen==='local'?'<span class="local">● Solo en este equipo</span>':''}</span>
+      <span class="bol-tx"><b>${esc(b.titulo)}</b><small>${esc(b.numero || 'Boletín')}${f?' · '+f:''}</small>${b.origen==='local'?'<span class="local">● Solo en este equipo</span>':''}</span>
     </button>`;
   }).join('') : `<div class="bol-vacio">${BOL.length ? 'Sin resultados para la búsqueda.' : 'Aún no hay boletines cargados.'}</div>`;
 }
 $('bolLista').addEventListener('click', e => { const b = e.target.closest('.bol'); if(b) abrirBoletin(BOL.find(x => x.id === b.dataset.id)); });
-$('bolFiltros').addEventListener('click', e => { const b = e.target.closest('button'); if(b){ bolFiltro = b.dataset.cat; renderBoletines(); } });
 $('bolBuscar').addEventListener('input', renderBoletines);
 
 async function abrirBoletin(b){
@@ -968,8 +1004,10 @@ async function abrirBoletin(b){
   const token = ++visorToken;
   const t = tipoDe(b);
   if(visorURL){ URL.revokeObjectURL(visorURL); visorURL = null; }
+  $('vbBody').innerHTML = '<div class="cargando">Cargando…</div>'; $('visor').classList.add('show'); document.body.style.overflow = 'hidden';
+  if(b.origen === 'nube' && b.partes && !b.blob){ try { b.blob = await window.Nube.boletines.archivo(b); } catch(e){ $('vbBody').innerHTML = '<div class="cargando">No se pudo descargar el boletín.</div>'; return; } if(token !== visorToken) return; }
   const url = b.blob ? (visorURL = URL.createObjectURL(b.blob)) : b.archivo;
-  $('vbCat').textContent = b.categoria || 'Boletín';
+  $('vbCat').textContent = b.numero ? 'Boletín de seguridad · ' + b.numero : 'Boletín de seguridad';
   $('vbTit').textContent = b.titulo;
   $('vbMeta').textContent = [b.fecha ? fechaLarga(b.fecha) : '', b.origen === 'local' ? 'Guardado solo en este equipo' : ''].filter(Boolean).join(' · ');
   $('vbDesc').style.display = b.descripcion ? '' : 'none'; $('vbDesc').textContent = b.descripcion || '';
@@ -977,8 +1015,7 @@ async function abrirBoletin(b){
   const bajar = $('vbBajar');
   bajar.style.display = t === 'link' ? 'none' : '';
   bajar.href = url; bajar.download = b.nombreArchivo || (url.split('/').pop().split('?')[0]) || 'boletin';
-  const body = $('vbBody'); body.innerHTML = '<div class="cargando">Cargando…</div>';
-  $('visor').classList.add('show'); document.body.style.overflow = 'hidden';
+  const body = $('vbBody');
   try{
     if(t === 'img'){ body.innerHTML = `<img src="${esc(url)}" alt="${esc(b.titulo)}">`; return; }
     if(t === 'link'){ body.innerHTML = `<iframe src="${esc(url)}" title="${esc(b.titulo)}"></iframe><div class="mini" style="color:#fff">Si el contenido no se muestra, use “Abrir en pestaña nueva”.</div>`; return; }
@@ -1008,12 +1045,12 @@ function cerrarVisor(){
 }
 $('vbX').onclick = cerrarVisor; $('vbCerrar').onclick = cerrarVisor;
 $('visor').addEventListener('click', e => { if(e.target.id === 'visor') cerrarVisor(); });
-document.addEventListener('keydown', e => { if(e.key === 'Escape'){ if($('visor').classList.contains('show')) cerrarVisor(); else cerrarPanel(); } });
+document.addEventListener('keydown', e => { if(e.key === 'Escape'){ if($('visor').classList.contains('show')) cerrarVisor(); else { $('mBoletin').classList.remove('show'); $('mClave').classList.remove('show'); cerrarPanel(); } } });
 
 function pintarBolEd(){
   const dest = (nubeLista && window.Nube.usuario) ? 'Se publicará en Firebase: lo verá todo el personal.' : 'Se guardará solo en este equipo. Para que lo vea todo el personal, conecte Firebase o envíe el PDF para publicarlo en GitHub.';
   $('bBolDestino').textContent = dest;
-  $('bolEdLista').innerHTML = BOL.map(b => `<div class="bol-ed"><span><b>${esc(b.titulo)}</b><small>${esc(b.categoria||'')} · ${esc(b.fecha||'')} · ${b.origen==='sitio'?'publicado en GitHub':b.origen==='nube'?'Firebase':'solo este equipo'}</small></span>
+  $('bolEdLista').innerHTML = BOL.map(b => `<div class="bol-ed"><span><b>${esc(b.titulo)}</b><small>${esc(b.numero||'')} ${esc(b.fecha||'')} · ${b.origen==='sitio'?'publicado en GitHub':b.origen==='nube'?'Firebase':'solo este equipo'}</small></span>
     ${b.origen==='sitio' ? '' : `<button class="btn danger" data-bborrar="${esc(b.id)}">Eliminar</button>`}</div>`).join('');
 }
 $('bolEdLista').addEventListener('click', async e => {
@@ -1027,8 +1064,8 @@ $('bBolGuardar').onclick = async () => {
   const titulo = $('bTit').value.trim(), archivo = $('bArchivo').files[0], enlace = $('bUrl').value.trim();
   if(!titulo){ toast('Escriba el título del boletín'); $('bTit').focus(); return; }
   if(!archivo && !enlace){ toast('Seleccione un archivo PDF/imagen o escriba un enlace'); return; }
-  if(archivo && archivo.size > 20*1024*1024){ toast('El archivo supera 20 MB'); return; }
-  const meta = { titulo, categoria: $('bCat').value, fecha: $('bFecha').value || hoyISO(), descripcion: $('bDescr').value.trim() };
+  if(archivo && archivo.size > 15*1024*1024){ toast('El archivo supera 15 MB'); return; }
+  const meta = { titulo, numero: $('bNum').value.trim(), fecha: $('bFecha').value || hoyISO(), descripcion: $('bDescr').value.trim() };
   if(archivo){ meta.tipo = archivo.type === 'application/pdf' ? 'pdf' : 'img'; meta.nombreArchivo = archivo.name; }
   else { meta.archivo = enlace; meta.tipo = /\.pdf(\?|$)/i.test(enlace) ? 'pdf' : 'link'; }
   const btn = $('bBolGuardar'); btn.disabled = true; btn.textContent = 'Guardando…';
@@ -1040,15 +1077,14 @@ $('bBolGuardar').onclick = async () => {
       await IDB.poner({ ...meta, id: 'l' + Date.now().toString(36), blob: archivo || null });
       toast('Boletín guardado en este equipo');
     }
-    ['bTit','bDescr','bUrl','bArchivo'].forEach(id => $(id).value = ''); $('bFecha').value = hoyISO();
+    ['bTit','bNum','bDescr','bUrl','bArchivo'].forEach(id => $(id).value = ''); $('bFecha').value = hoyISO();
     await cargarBoletines();
   }catch(err){ toast('No se pudo guardar el boletín: ' + err.message); }
   finally{ btn.disabled = false; btn.textContent = 'Agregar boletín'; }
 };
-$('bBolNuevo').onclick = () => {
-  if(nubeLista && !window.Nube.usuario){ $('mLogin').classList.add('show'); return; }
-  abrirPanel(); setTimeout(() => { $('fsBoletines').scrollIntoView({ behavior:'smooth', block:'start' }); $('bTit').focus(); }, 280);
-};
+function abrirCarga(){ pintarBolEd(); if(!$('bFecha').value) $('bFecha').value = hoyISO(); $('mBoletin').classList.add('show'); setTimeout(() => $('bTit').focus(), 50); }
+$('bBolNuevo').onclick = () => pedirClave(abrirCarga);
+$('bmX').onclick = () => $('mBoletin').classList.remove('show');
 
 /* ---------- Inicio ---------- */
 const params = new URLSearchParams(location.search);
@@ -1060,6 +1096,7 @@ if(params.has('pantalla')){
 if(S.fecha !== hoyISO()){ S.fecha = hoyISO(); S.iuv = null; S.origen = null; S.iuvObs = null; S.nota = ''; }
 bindFormulario();
 render();
+actualizarCandado();
 $('bFecha').value = hoyISO();
 cargarBoletines();
 if(S.origen !== 'dmc' || S.horarioFecha !== S.fecha) cargarReferencia(true);
