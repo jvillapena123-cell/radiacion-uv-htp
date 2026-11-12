@@ -463,6 +463,8 @@ body.pdf{background:#fff}
     <div class="vdesc" id="vbDesc"></div>
     <div class="visor-body" id="vbBody"></div>
     <footer>
+      <button class="btn danger" id="vbEliminar" style="margin-right:auto">🗑 Eliminar</button>
+      <button class="btn dark" id="vbPublicar">☁ Publicar para todos</button>
       <a class="btn ghost" id="vbAbrir" target="_blank" rel="noopener">Abrir en pestaña nueva ↗</a>
       <a class="btn primary" id="vbBajar">⬇ Descargar</a>
       <button class="btn dark" id="vbCerrar">Cerrar</button>
@@ -1123,7 +1125,7 @@ const IDB = {
   poner(b){ return this.op('readwrite', o => o.put(b)); },
   borrar(id){ return this.op('readwrite', o => o.delete(id)); }
 };
-let BOL = [], visorURL = null, visorToken = 0;
+let BOL = [], visorURL = null, visorToken = 0, visorBol = null;
 
 function tipoDe(b){
   if(b.tipo) return b.tipo;
@@ -1165,6 +1167,9 @@ async function abrirBoletin(b){
   if(!b) return;
   const token = ++visorToken;
   const t = tipoDe(b);
+  visorBol = b;
+  $('vbEliminar').style.display = b.origen === 'sitio' ? 'none' : '';
+  $('vbPublicar').style.display = b.origen === 'local' && nubeLista ? '' : 'none';
   if(visorURL){ URL.revokeObjectURL(visorURL); visorURL = null; }
   $('vbBody').innerHTML = '<div class="cargando">Cargando…</div>'; $('visor').classList.add('show'); document.body.style.overflow = 'hidden';
   if(b.origen === 'nube' && b.partes && !b.blob){ try { b.blob = await window.Nube.boletines.archivo(b); } catch(e){ $('vbBody').innerHTML = '<div class="cargando">No se pudo descargar el boletín.</div>'; return; } if(token !== visorToken) return; }
@@ -1172,7 +1177,7 @@ async function abrirBoletin(b){
   $('vbCat').textContent = b.numero ? 'Boletín de seguridad · ' + b.numero : 'Boletín de seguridad';
   $('vbTit').textContent = b.titulo;
   $('vbMeta').textContent = [b.fecha ? fechaLarga(b.fecha) : '', b.origen === 'local' ? 'Guardado solo en este equipo' : ''].filter(Boolean).join(' · ');
-  $('vbDesc').style.display = b.descripcion ? '' : 'none'; $('vbDesc').textContent = b.descripcion || '';
+  $('vbDesc').style.color = ''; $('vbDesc').style.display = b.descripcion ? '' : 'none'; $('vbDesc').textContent = b.descripcion || '';
   $('vbAbrir').href = url;
   const bajar = $('vbBajar');
   bajar.style.display = t === 'link' ? 'none' : '';
@@ -1205,6 +1210,28 @@ function cerrarVisor(){
   visorToken++; $('visor').classList.remove('show'); $('vbBody').innerHTML = ''; document.body.style.overflow = '';
   if(visorURL){ URL.revokeObjectURL(visorURL); visorURL = null; }
 }
+async function eliminarBoletin(b){
+  if(!confirm(`¿Eliminar el boletín “${b.titulo}”?`)) return;
+  try { if(b.origen === 'nube') await window.Nube.boletines.borrar(b); else await IDB.borrar(b.id); toast('Boletín eliminado'); }
+  catch(err){ toast('No se pudo eliminar: ' + (err.code || err.message)); return; }
+  cerrarVisor(); cargarBoletines();
+}
+async function publicarBoletinLocal(b){
+  const btn = $('vbPublicar'); btn.disabled = true; btn.textContent = 'Publicando…';
+  try{
+    const { id, origen, blob, ...meta } = b;
+    Object.keys(meta).forEach(k => meta[k] === undefined && delete meta[k]);
+    const archivo = blob ? new File([blob], b.nombreArchivo || 'boletin', { type: blob.type }) : null;
+    await window.Nube.boletines.subir(meta, archivo); await IDB.borrar(id);
+    toast('Boletín publicado para todo el personal'); cerrarVisor(); cargarBoletines();
+  }catch(err){
+    console.error(err);
+    $('vbDesc').style.display = ''; $('vbDesc').style.color = '#b3261e';
+    $('vbDesc').textContent = '⚠ No se pudo publicar en Firebase: ' + (err.code || '') + ' ' + (err.message || err) + ' — envíe una captura de este mensaje.';
+  }finally{ btn.disabled = false; btn.textContent = '☁ Publicar para todos'; }
+}
+$('vbEliminar').onclick = () => { const b = visorBol; if(b) pedirClave(() => eliminarBoletin(b)); };
+$('vbPublicar').onclick = () => { const b = visorBol; if(b) pedirClave(() => publicarBoletinLocal(b)); };
 $('vbX').onclick = cerrarVisor; $('vbCerrar').onclick = cerrarVisor;
 $('visor').addEventListener('click', e => { if(e.target.id === 'visor') cerrarVisor(); });
 document.addEventListener('keydown', e => { if(e.key === 'Escape'){ if($('visor').classList.contains('show')) cerrarVisor(); else { ['mBoletin','mClave','mAgMes','mAgDet','mAgForm'].forEach(id => $(id).classList.remove('show')); cerrarPanel(); } } });
@@ -1246,6 +1273,7 @@ $('bBolGuardar').onclick = async () => {
   const btn = $('bBolGuardar'); btn.disabled = true; btn.textContent = 'Guardando…';
   try{
     if(nubeLista && window.Nube.usuario){
+      Object.keys(meta).forEach(k => meta[k] === undefined && delete meta[k]);
       try { await window.Nube.boletines.subir(meta, archivo); toast('Boletín publicado para todo el personal'); $('bBolDestino').style.color = ''; }
       catch(err){
         console.error('Error al subir boletín', err);
