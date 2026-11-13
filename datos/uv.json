@@ -1,37 +1,37 @@
 {
- "generado": "2026-11-13T03:08-03:00",
+ "generado": "2026-11-13T14:07-03:00",
  "fecha": "2026-11-13",
  "lugar": "Bahía San Vicente, Talcahuano",
  "lat": -36.732,
  "lon": -73.128,
  "pronostico": [
   {
-   "fecha": "2026-11-12",
-   "iuv": 8.7
-  },
-  {
    "fecha": "2026-11-13",
-   "iuv": 8.3
+   "iuv": 8.2
   },
   {
    "fecha": "2026-11-14",
-   "iuv": 8.6
+   "iuv": 8.7
   },
   {
    "fecha": "2026-11-15",
-   "iuv": 5.2
+   "iuv": 4.8
   },
   {
    "fecha": "2026-11-16",
-   "iuv": 6.8
+   "iuv": 8.3
   },
   {
    "fecha": "2026-11-17",
-   "iuv": 7.7
+   "iuv": 8.7
   },
   {
    "fecha": "2026-11-18",
-   "iuv": 8.2
+   "iuv": 8.7
+  },
+  {
+   "fecha": "2026-11-19",
+   "iuv": 7.5
   }
  ],
  "horario": [
@@ -77,23 +77,23 @@
   },
   {
    "h": 10,
-   "iuv": 3.6
+   "iuv": 3.5
   },
   {
    "h": 11,
-   "iuv": 5.5
+   "iuv": 5.2
   },
   {
    "h": 12,
-   "iuv": 7.2
+   "iuv": 7.0
   },
   {
    "h": 13,
-   "iuv": 8.2
+   "iuv": 7.7
   },
   {
    "h": 14,
-   "iuv": 8.7
+   "iuv": 8.2
   },
   {
    "h": 15,
@@ -101,19 +101,19 @@
   },
   {
    "h": 16,
-   "iuv": 6.3
+   "iuv": 7.0
   },
   {
    "h": 17,
-   "iuv": 5.2
+   "iuv": 5.8
   },
   {
    "h": 18,
-   "iuv": 3.8
+   "iuv": 3.9
   },
   {
    "h": 19,
-   "iuv": 2.1
+   "iuv": 2.2
   },
   {
    "h": 20,
@@ -135,8 +135,5 @@
  "fuentePronostico": "Open-Meteo (modelo CAMS)",
  "iuvDia": 8,
  "origenIuv": "pronostico",
- "horaMayor": "12:00 – 17:00",
- "avisos": [
-  "pronóstico: <urlopen error _ssl.c:994: The handshake operation timed out>"
- ]
+ "horaMayor": "12:00 – 17:00"
 }
