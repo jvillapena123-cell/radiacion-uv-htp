@@ -1,6 +1,6 @@
 {
- "generado": "2026-11-13T19:49-03:00",
- "fecha": "2026-11-13",
+ "generado": "2026-11-14T00:02-03:00",
+ "fecha": "2026-11-14",
  "lugar": "Bahía San Vicente, Talcahuano",
  "lat": -36.732,
  "lon": -73.128,
@@ -133,7 +133,10 @@
   }
  ],
  "fuentePronostico": "Open-Meteo (modelo CAMS)",
- "iuvDia": 8,
+ "iuvDia": 9,
  "origenIuv": "pronostico",
- "horaMayor": "12:00 – 17:00"
+ "horaMayor": "12:00 – 17:00",
+ "avisos": [
+  "pronóstico: <urlopen error _ssl.c:994: The handshake operation timed out>"
+ ]
 }
