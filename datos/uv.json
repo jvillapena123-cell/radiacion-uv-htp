@@ -1,5 +1,5 @@
 {
- "generado": "2026-11-22T03:12-03:00",
+ "generado": "2026-11-22T14:03-03:00",
  "fecha": "2026-11-22",
  "lugar": "Bahía San Vicente, Talcahuano",
  "lat": -36.732,
@@ -27,11 +27,11 @@
   },
   {
    "fecha": "2026-11-27",
-   "iuv": 9.1
+   "iuv": 8.9
   },
   {
    "fecha": "2026-11-28",
-   "iuv": 8.1
+   "iuv": 9.1
   }
  ],
  "horario": [
@@ -105,19 +105,19 @@
   },
   {
    "h": 17,
-   "iuv": 5.9
+   "iuv": 6.1
   },
   {
    "h": 18,
-   "iuv": 4.2
+   "iuv": 4.3
   },
   {
    "h": 19,
-   "iuv": 2.2
+   "iuv": 2.5
   },
   {
    "h": 20,
-   "iuv": 0.9
+   "iuv": 1.0
   },
   {
    "h": 21,
@@ -135,5 +135,5 @@
  "fuentePronostico": "Open-Meteo (modelo CAMS)",
  "iuvDia": 9,
  "origenIuv": "pronostico",
- "horaMayor": "12:00 – 17:00"
+ "horaMayor": "12:00 – 18:00"
 }
